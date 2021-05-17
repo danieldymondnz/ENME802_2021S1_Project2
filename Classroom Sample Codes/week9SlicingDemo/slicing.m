@@ -37,7 +37,7 @@ zlabel('Z-axis');
 view(3);
 
 % Find the maximum height from the base
-zmax = max(Z)
+zmax = max(Z);
 
 % Define the number of slices and their Z positions
 INC = 5; %5 units/per increment
@@ -45,9 +45,7 @@ NOSTEP = zmax/INC;
 zs = 0;
 
 % Loop through each incremental height to generate a slice
-
-
-for i=1:NOSTEP - 1
+for i=1:NOSTEP -1
     
     zs = zs+INC;
     C = 0;
