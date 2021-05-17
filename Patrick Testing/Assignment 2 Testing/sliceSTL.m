@@ -1,4 +1,4 @@
-function sliceSTL(X,Y,Z,connections,planeEquation)
+function sliceSTL(X,Y,Z,connections,planeEquation,inc)
 zmax = max(Z);
 Intercepts1 = zeros(3);
 Intercepts2 = zeros(3);
@@ -8,9 +8,9 @@ counter2 = 1;
 counter3 = 1;
 sliceHeight = 0;
 %go through all points until hits zmax
-for j = 1:zmax/5-1
+for j = 0:(zmax/inc)
     syms t x y z k;
-    sliceHeight = sliceHeight+5;
+    sliceHeight = sliceHeight+inc;
     for i=1:height(connections)
     %find equations for line 1 of triangle pts(1,2)
     line1X1 = X(connections(i,1));
@@ -58,25 +58,25 @@ for j = 1:zmax/5-1
     
     
     
-    %PLOT P1 AND P2 HERE TO SEE
-    figure(1)
-    view(3)
-    hold on;
-    
-    line1P1 = [line1X1,line1Y1,line1Z1];
-    line1P2 = [line1X2,line1Y2,line1Z2];
-    pts1 = [line1P1;line1P2];
-    line(pts1(:,1), pts1(:,2), pts1(:,3));
-    
-    line2P1 = [line2X1,line2Y1,line2Z1];
-    line2P2 = [line2X2,line2Y2,line2Z2];
-    pts2 = [line2P1;line2P2];
-    line(pts2(:,1), pts2(:,2), pts2(:,3));
-    
-    line3P1 = [line3X1,line3Y1,line3Z1];
-    line3P2 = [line3X2,line3Y2,line3Z2];
-    pts3 = [line3P1;line3P2];
-    line(pts3(:,1), pts3(:,2), pts3(:,3));
+    %PLOT LINES HERE TO SEE
+%     figure(1)
+%     view(3)
+%     hold on;
+%     
+%     line1P1 = [line1X1,line1Y1,line1Z1];
+%     line1P2 = [line1X2,line1Y2,line1Z2];
+%     pts1 = [line1P1;line1P2];
+%     line(pts1(:,1), pts1(:,2), pts1(:,3));
+%     
+%     line2P1 = [line2X1,line2Y1,line2Z1];
+%     line2P2 = [line2X2,line2Y2,line2Z2];
+%     pts2 = [line2P1;line2P2];
+%     line(pts2(:,1), pts2(:,2), pts2(:,3));
+%     
+%     line3P1 = [line3X1,line3Y1,line3Z1];
+%     line3P2 = [line3X2,line3Y2,line3Z2];
+%     pts3 = [line3P1;line3P2];
+%     line(pts3(:,1), pts3(:,2), pts3(:,3));
     
     
     %sub into plane equation
@@ -153,14 +153,14 @@ for j = 1:zmax/5-1
     end
     
 %     disp(sliceHeight)
-figure(1);
-hold on;
-view(3);
-scatter3(Intercepts1(:,1),Intercepts1(:,2),Intercepts1(:,3));
-scatter3(Intercepts2(:,1),Intercepts2(:,2),Intercepts2(:,3));  
-scatter3(Intercepts3(:,1),Intercepts3(:,2),Intercepts3(:,3));  
+    figure(1);
+    hold on;
+    view(3);
+    scatter3(Intercepts1(:,1),Intercepts1(:,2),Intercepts1(:,3));
+    scatter3(Intercepts2(:,1),Intercepts2(:,2),Intercepts2(:,3));  
+    scatter3(Intercepts3(:,1),Intercepts3(:,2),Intercepts3(:,3));  
 
 end
-    
+
 
 end

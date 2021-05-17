@@ -1,3 +1,4 @@
+function [F,V,N] = importSTL(stlFile)
 % figure
 % model = createpde;
 % gm = importGeometry(model,'Test.STL');
@@ -16,5 +17,6 @@
 % figure
 % pdemesh(model)
 
-[F,V,N] = stlread('Box.STL');
+[F,V,N] = stlread(stlFile);
 
+end
