@@ -10,7 +10,7 @@ end
 % Check if sliceType input is Flat or Curved.
 if strcmp(sliceType,"Flat Uniform Slice")
     % Call Uniform Slice function
-    stlSlicedObj = FlatUniformSliceGenerator(stl, sliceThickness);
+    stlSliced = FlatUniformSliceGenerator(stl, sliceThickness);
 else
     
 end
