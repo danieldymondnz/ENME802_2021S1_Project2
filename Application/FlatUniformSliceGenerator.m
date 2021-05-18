@@ -30,6 +30,53 @@ classdef FlatUniformSliceGenerator
             obj.sliceThickness = preferedThickness;
         end
         
+        
+        function [sliceFlag, X, Y, Z] = getSlicePoint(obj, point1, point2, currZ)
+        % Generates a point for a given line between two points
+        
+        
+            % Initalise Values
+            X = 0;
+            Y = 0;
+            Z = 0;
+            
+            % Parse the Point Data
+            x1 = point1(1,1);
+            y1 = point1(1,2);
+            z1 = point1(1,3);
+            x2 = point2(1,1);
+            y2 = point2(1,2);
+            z2 = point2(1,3);
+            
+            % If the line cuts through the slice, then find the point
+            if ((z1 <= currZ && currZ <= z2) || (currZ <= z1 && z2 <= currZ))
+                
+                sliceFlag = 1;
+                
+                if (z1 == z2)
+                    X = x1;
+                    Y = y1;
+                    Z = currZ;
+            
+                % Otherwise, if not horizontal, determine the cut point
+                else
+                    X = x1 + ((z1-currZ)/(z1-z2))*(x2-x1);
+                    Y = y1 + ((z1-currZ)/(z1-z2))*(y2-y1);
+                    Z = currZ;
+                end
+                
+            % Otherwise, this line doesn't get sliced, so ignore by
+            % returning a zero for the sliceFlag
+            else
+                sliceFlag = 0;
+            end
+            
+        end
+        
+        
+        
+        
+        
         % Obtain the X,Y,Z Coordinate for each node of an element object
         function elementData = getElementData(obj, elementNumber)
         
@@ -47,6 +94,10 @@ classdef FlatUniformSliceGenerator
             end
             
         end
+        
+        
+        
+        
         
         
         
