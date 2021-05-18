@@ -144,7 +144,7 @@ for j = 0:(zmax/inc)
     end
     
     if ( ~isempty(xIntercept3) || ~isempty(yIntercept3) || ~isempty(zIntercept3) )
-        Intercepts3(counter3,1) = xIntercept3;
+        Intercepts3(counter3,1) = xIntercept3; 
         Intercepts3(counter3,2) = yIntercept3;
         Intercepts3(counter3,3) = zIntercept3;
         counter3 = counter3 + 1;
