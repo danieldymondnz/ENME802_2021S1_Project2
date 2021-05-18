@@ -59,24 +59,24 @@ for j = 0:(zmax/inc)
     
     
     %PLOT LINES HERE TO SEE
-%     figure(1)
-%     view(3)
-%     hold on;
-%     
-%     line1P1 = [line1X1,line1Y1,line1Z1];
-%     line1P2 = [line1X2,line1Y2,line1Z2];
-%     pts1 = [line1P1;line1P2];
-%     line(pts1(:,1), pts1(:,2), pts1(:,3));
-%     
-%     line2P1 = [line2X1,line2Y1,line2Z1];
-%     line2P2 = [line2X2,line2Y2,line2Z2];
-%     pts2 = [line2P1;line2P2];
-%     line(pts2(:,1), pts2(:,2), pts2(:,3));
-%     
-%     line3P1 = [line3X1,line3Y1,line3Z1];
-%     line3P2 = [line3X2,line3Y2,line3Z2];
-%     pts3 = [line3P1;line3P2];
-%     line(pts3(:,1), pts3(:,2), pts3(:,3));
+    figure(2)
+    view(3)
+    hold on;
+    
+    line1P1 = [line1X1,line1Y1,line1Z1];
+    line1P2 = [line1X2,line1Y2,line1Z2];
+    pts1 = [line1P1;line1P2];
+    line(pts1(:,1), pts1(:,2), pts1(:,3));
+    
+    line2P1 = [line2X1,line2Y1,line2Z1];
+    line2P2 = [line2X2,line2Y2,line2Z2];
+    pts2 = [line2P1;line2P2];
+    line(pts2(:,1), pts2(:,2), pts2(:,3));
+    
+    line3P1 = [line3X1,line3Y1,line3Z1];
+    line3P2 = [line3X2,line3Y2,line3Z2];
+    pts3 = [line3P1;line3P2];
+    line(pts3(:,1), pts3(:,2), pts3(:,3));
     
     
     %sub into plane equation
