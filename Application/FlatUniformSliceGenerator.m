@@ -2,7 +2,7 @@
 %   Uses Original Code to generate equations for Slices at Uniform
 %   Thickness
 
-classdef FlatUniformSliceGenerator
+classdef FlatUniformSliceGenerator < handle
     
     properties (SetAccess = protected)
         
@@ -38,7 +38,69 @@ classdef FlatUniformSliceGenerator
             slicePath = obj.slicePath;
         end
         
+        % Generates and stores all slices
+        function obj = generateSlices(obj)
+        
+            % Get the maximum Z height
+            maxZ = max(obj.points(:, 3));
+            currZ = 0;
+            
+            % Slice at each layer height
+            while currZ < maxZ
+                
+                % Slice at this layer and append to slice Path
+                obj.slicePath = [obj.slicePath; slice(obj, currZ)];
+                currZ = currZ + obj.sliceThickness;
+                
+            end
+            
+            % If the end is reached, add the final layer
+            obj.slicePath = [obj.slicePath; slice(obj, maxZ)];
+            
+            obj.slicePath
+                
+        end
+        
+        
+        % Inspect each slice and determine elements which are cut
+        function points = slice(obj, zHeight)
+        
+            points = zeros(0);
+            
+            % Slice each node at this height
+            for element = 1:obj.numOfElements
+                
+                points = [points; sliceElement(obj, element, zHeight)];
+                
+            end
+            
+        end
+         
         % Inspect each element and get sliced nodes (if applicable)
+        function points = sliceElement(obj, elementNumber, zHeight)
+            
+            % Initalise the matrix
+            points = zeros(0);
+            
+            % Parse the data for this element
+            elementVertices = getElementData(obj, elementNumber);
+            numOfVertices = height(elementVertices);
+            
+            % For each element, generate points for each edge of shape
+            for edge = 1: numOfVertices - 1
+                
+                point1 = elementVertices(edge, :);
+                point2 = elementVertices(edge + 1, :);
+                points = [points; getSlicePoint(obj, point1, point2, zHeight)];
+                
+            end
+            
+            % Complete Final Point
+            point1 = elementVertices(numOfVertices, :);
+            point2 = elementVertices(1, :);
+            points = [points; getSlicePoint(obj, point1, point2, zHeight)];
+            
+        end
         
         % Inspect a line between two nodes and evaluate if a point exists
         function points = getSlicePoint(obj, point1, point2, currZ)
@@ -61,7 +123,9 @@ classdef FlatUniformSliceGenerator
                 % If the line sits on the plane, add both end coordinates
                 if (z1 == z2)
                     points = [points; x1, y1, z1];
-                    points = [points; x2, y2, z2];
+                    %points = [points; x2, y2, z2];
+                    plot3(x1,y1,z1,'-r*','LineWidth',2)
+                    hold on
             
                 % Otherwise, if not horizontal, determine the cut point
                 else
@@ -69,9 +133,13 @@ classdef FlatUniformSliceGenerator
                     Y = y1 + ((z1-currZ)/(z1-z2))*(y2-y1);
                     Z = currZ;
                     points = [points; X, Y, Z];
+                    plot3(X,Y,Z,'-r*','LineWidth',2)
+                    hold on
                 end
 
             end
+            
+            
             
         end
         
@@ -92,12 +160,6 @@ classdef FlatUniformSliceGenerator
             end
             
         end
-        
-        
-        
-        
-        
-        
         
         function outputArg = method1(obj,inputArg)
             %METHOD1 Summary of this method goes here
