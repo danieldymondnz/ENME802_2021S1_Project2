@@ -1,7 +1,6 @@
 function sliceSarat()
 
-[F,V,N] = stlread('Test3.STL');
-F = evalin('base','F');
+[F,V,N] = stlread("Test Objects\Box.STL");
 
 ncon = F.ConnectivityList;
 
