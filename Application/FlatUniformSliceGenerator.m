@@ -65,25 +65,143 @@ classdef FlatUniformSliceGenerator < handle
         % Inspect each slice and determine elements which are cut
         function points = slice(obj, zHeight)
         
-            points = zeros(0);
+            promisedPairs = zeros(0);
             
             % Slice each node at this height
             for element = 1:obj.numOfElements
                 
-                points = [points; sliceElement(obj, element, zHeight)];
+                promisedPairs = [promisedPairs; sliceElement(obj, element, zHeight)];
                 
             end
-
+            
+            promisedPairs;
+            points = sortPromisedPairsToPath(obj, promisedPairs);
+            points;
             
         end
-         
+        
+        %% RECUSRSION
+        function path = sortPromisedPairsToPath(obj, promisedPairs)
+        
+            numPromisePairs = height(promisedPairs);
+            
+            if numPromisePairs == 0
+                return
+            end
+            
+            if numPromisePairs == 1
+                path = [promisedPairs(1, 1:3); promisedPairs(1, 4:6)];
+                return
+            end
+            
+            % Remove Duplicate Paths
+            [~,uPP] = unique(promisedPairs , 'rows');
+            promisedPairs = promisedPairs(uPP,:);
+            
+            % Remove Dupliate Paths in flipped array
+            promisedPairsFlipped = [promisedPairs(:,4:6), promisedPairs(:,1:3)];
+            [~,a,b] = intersect(promisedPairs,promisedPairsFlipped,'rows');
+            removed = setxor(b,a);
+            promisedPairs(removed',:) = [];
+
+            
+            % Start with original point
+            path = [promisedPairs(1, 1:3); promisedPairs(1, 4:6)];
+            
+            % Remove first point and sort remaining promises
+            promisedPairs(1,:) = [];
+            
+            % Sort the remainder
+            path = [path; sortPromisedPairsToPathRecursion(obj, promisedPairs, path)];
+            
+        end
+        
+        function returnPath = sortPromisedPairsToPathRecursion(obj, remainingPromisedPairs, currentPath)
+            
+            % If the remaining pairs in subset is 1, just return the
+            % current pair
+            if height(remainingPromisedPairs) == 1
+                returnPath = [remainingPromisedPairs(1, 1:3); remainingPromisedPairs(1, 4:6)];
+            
+            % Otherwise, sort the remainder
+            else
+                
+                % Find the next point which matches the current end of path
+                xE = currentPath(end, 1); xS = currentPath(1, 1);
+                yE = currentPath(end, 2); yS = currentPath(1, 2);
+                
+                for i = 1:height(remainingPromisedPairs)
+                
+                    x = remainingPromisedPairs(i, 1);
+                    y = remainingPromisedPairs(i, 2);
+                    
+                    % If this is a match, then append
+                    if (xE == x && yE == y)
+                       
+                        returnPath = [remainingPromisedPairs(i, 1:3); remainingPromisedPairs(i, 4:6)];
+                        remainingPromisedPairs(i,:) = [];
+                        
+                        returnPath = [returnPath; sortPromisedPairsToPathRecursion(obj, remainingPromisedPairs, [currentPath; returnPath])];
+                        
+                        return
+                        
+                    end
+                    
+                    % If this is a match, then append
+                    if (xS == x && yS == y)
+                       
+                        returnPath = [remainingPromisedPairs(i, 1:3); remainingPromisedPairs(i, 4:6)];
+                        remainingPromisedPairs(i,:) = [];
+                        
+                        returnPath = [returnPath; sortPromisedPairsToPathRecursion(obj, remainingPromisedPairs, [currentPath; returnPath])];
+                        
+                        return
+                        
+                    end
+                    
+                    x = remainingPromisedPairs(i, 4);
+                    y = remainingPromisedPairs(i, 5);
+                    
+                     % If this is a match, then append
+                    if (xE == x && yE == y)
+                       
+                        returnPath = [remainingPromisedPairs(i, 4:6); remainingPromisedPairs(i, 1:3)];
+                        remainingPromisedPairs(i,:) = [];
+                        
+                        returnPath = [returnPath; sortPromisedPairsToPathRecursion(obj, remainingPromisedPairs, [currentPath; returnPath])];
+                        
+                        return
+                        
+                    end
+                    
+                     % If this is a match, then append
+                    if (xS == x && yS == y)
+                       
+                        returnPath = [remainingPromisedPairs(i, 4:6); remainingPromisedPairs(i, 1:3)];
+                        remainingPromisedPairs(i,:) = [];
+                        
+                        returnPath = [returnPath; sortPromisedPairsToPathRecursion(obj, remainingPromisedPairs, [currentPath; returnPath])];
+                        
+                        return
+                        
+                    end
+                    
+                end
+                
+                returnPath = zeros(0);
+                
+                
+            end
+            
+        end
+        
         % Inspect each element and get a promised pair (path between two
         % nodes along the profile of the element
         function promisedPairs = sliceElement(obj, elementNumber, zHeight)
             
-            % Initalise the matrix
+            % Initalise the matrices
             promisedPairs = zeros(0);
-            promisedPoint = zeros(0);
+            promisedPoints = zeros(0);
             
             % Parse the data for this element
             elementVertices = getElementData(obj, elementNumber);
@@ -94,36 +212,42 @@ classdef FlatUniformSliceGenerator < handle
                 
                 point1 = elementVertices(edge, :);
                 point2 = elementVertices(edge + 1, :);
-                promisedPoints = getSlicePoint(obj, point1, point2, zHeight);
+                points = getSlicePoint(obj, point1, point2, zHeight);
                 
                 % If two points, hold this pair and append
-                if height(promisedPoints) == 2
-                    promisedPairs = [promisedPairs; promisedPoints(1,:), promisedPoints(2,:)];
+                if height(points) == 2
+                    promisedPairs = [promisedPairs; points(1,:), points(2,:)];
                 else
-                    promisedPoint = [promisedPoint; promisedPoints];
+                    % If point already exists, ignore
+                    promisedPoints = [promisedPoints; points];
+                end
                 
             end
             
             % Complete Final Point
             point1 = elementVertices(numOfVertices, :);
             point2 = elementVertices(1, :);
-            promisedPoints = getSlicePoint(obj, point1, point2, zHeight);
+            points = getSlicePoint(obj, point1, point2, zHeight);
             
             % If two points, hold this pair and append
-            if height(promisedPoints) == 2
-                promisedPairs = [promisedPoints(1,:), promisedPoints(2,:)];
+            if height(points) == 2
+                promisedPairs = [points(1,:), points(2,:)];
             else
-                promisedPoint = [promisedPoint; promisedPoints];
-                    
-            % If there are two points held, then append to PromisedPairs
-            if height(promisedPairs) > 1
-                promisedPairs = [promisedPairs;  promisedPoint(1,:), promisedPoint(2,:)];
-                        
-            % Plot
-            if (height(promisedPoints) > 0)
-                plot3(promisedPoints(:,1), promisedPoints(:,2), promisedPoints(:,3),'-r*','LineWidth',2);
+                promisedPoints = [promisedPoints; points];
             end
-            x = 0;
+                
+            % If there are two points held, then append to PromisedPairs
+            if height(promisedPoints) > 1
+                promisedPairs = [promisedPairs;  promisedPoints(1,:), promisedPoints(2,:)];
+            end            
+            
+            % Plot
+%             if (height(promisedPoints) > 0)
+%                 plot3(promisedPoints(:,1), promisedPoints(:,2), promisedPoints(:,3),'-r*','LineWidth',2);
+%             end
+%             x = 0;
+            
+            
             
         end
         
