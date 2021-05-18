@@ -75,6 +75,8 @@ classdef FlatUniformSliceGenerator < handle
             end
             
             promisedPairs;
+            shape = alphaShape([promisedPairs(:,1); promisedPairs(:,4)], [promisedPairs(:,2); promisedPairs(:,5)]);
+            plot(shape)
             points = sortPromisedPairsToPath(obj, promisedPairs);
             points;
             
