@@ -82,7 +82,7 @@ classdef FlatUniformSliceGenerator < handle
             
         end
         
-        % RECUSRSION TO CLEAN
+        %% RECUSRSION
         function path = sortPromisedPairsToPath(obj, promisedPairs)
         
             numPromisePairs = height(promisedPairs);
@@ -205,6 +205,10 @@ classdef FlatUniformSliceGenerator < handle
             paths = zeros(0);
             intersectingPoints = zeros(0);
             
+            
+            promisedPairs = zeros(0);
+            promisedPoints = zeros(0);
+            
             % Parse the data for this element
             elementVertices = getElementData(obj, elementNumber);
             numOfVertices = height(elementVertices);
@@ -222,19 +226,19 @@ classdef FlatUniformSliceGenerator < handle
                 
                 point1 = elementVertices(edge, :);
                 point2 = elementVertices(edge + 1, :);
-                slicedPoints = getSlicePoint(obj, point1, point2, zHeight);
+                points = getSlicePoint(obj, point1, point2, zHeight);
                 
                 % If two points are returned, this edge lies on the plane.
                 % Append to lines
-                if height(slicedPoints) == 2
-                    paths = [promisedPairs; slicedPoints(1,:), slicedPoints(2,:)];
+                if height(points) == 2
+                    paths = [promisedPairs; points(1,:), points(2,:)];
                     
                 % If only a single point is returned, hold this item -
                 % either this is a triangle with two intercepting edges or
                 % 1 vertice touching the plane
-                elseif height(slicedPoints) == 1
-                    intersectingPoints = [intersectingPoints; slicedPoints(1,:)];
-                end
+                else if height(points) == 1
+                    intersectingPoints = [intersectingPoints; points(1,:)];
+                    
                 % Otherwise, nothing is found on this edge - proceed to
                 % next
                                     
@@ -246,23 +250,23 @@ classdef FlatUniformSliceGenerator < handle
             % If all edges are touching the plane, than this geometry is
             % not relevant to the overall path - return nothing
             if height(paths) == 3
-                paths = zeros(0);
+                paths = zeros(
+                
+            % If there are two points held, then append to PromisedPairs
+            if height(promisedPoints) > 1
+                promisedPairs = [promisedPairs;  promisedPoints(1,:), promisedPoints(2,:)];
+            end            
             
-            % If there are two intersectingPoints, the line between these
-            % points will generate a path for this layer
-            elseif height(intersectingPoints) == 2 
-                paths = intersectingPoints;
+            % Plot
+%             if (height(promisedPoints) > 0)
+%                 plot3(promisedPoints(:,1), promisedPoints(:,2), promisedPoints(:,3),'-r*','LineWidth',2);
+%             end
+%             x = 0;
             
-            % If there is only one intersectingPoint stored, this is the
-            % only touching element on this plane - return for analysis
-            elseif height(intersectingPoints) == 1
-                paths = intersectingPoints;
-            end
             
-            % Otherwise, there is just a single path touching the plane -
-            % return existing values
-                 
+            
         end
+        
         
         function intersectingVertices = getSlicePoint(point1, point2, currZ)
         % Inspect a line between two vetrices and evaluate if a point exists
