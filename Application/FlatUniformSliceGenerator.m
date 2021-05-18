@@ -77,11 +77,13 @@ classdef FlatUniformSliceGenerator < handle
             
         end
          
-        % Inspect each element and get sliced nodes (if applicable)
-        function points = sliceElement(obj, elementNumber, zHeight)
+        % Inspect each element and get a promised pair (path between two
+        % nodes along the profile of the element
+        function promisedPairs = sliceElement(obj, elementNumber, zHeight)
             
             % Initalise the matrix
-            points = zeros(0);
+            promisedPairs = zeros(0);
+            promisedPoint = zeros(0);
             
             % Parse the data for this element
             elementVertices = getElementData(obj, elementNumber);
@@ -92,30 +94,45 @@ classdef FlatUniformSliceGenerator < handle
                 
                 point1 = elementVertices(edge, :);
                 point2 = elementVertices(edge + 1, :);
-                points = [points; getSlicePoint(obj, point1, point2, zHeight)];
+                promisedPoints = getSlicePoint(obj, point1, point2, zHeight);
+                
+                % If two points, hold this pair and append
+                if height(promisedPoints) == 2
+                    promisedPairs = [promisedPairs; promisedPoints(1,:), promisedPoints(2,:)];
+                else
+                    promisedPoint = [promisedPoint; promisedPoints];
                 
             end
             
             % Complete Final Point
             point1 = elementVertices(numOfVertices, :);
             point2 = elementVertices(1, :);
-            points = [points; getSlicePoint(obj, point1, point2, zHeight)];
+            promisedPoints = getSlicePoint(obj, point1, point2, zHeight);
             
+            % If two points, hold this pair and append
+            if height(promisedPoints) == 2
+                promisedPairs = [promisedPoints(1,:), promisedPoints(2,:)];
+            else
+                promisedPoint = [promisedPoint; promisedPoints];
+                    
+            % If there are two points held, then append to PromisedPairs
+            if height(promisedPairs) > 1
+                promisedPairs = [promisedPairs;  promisedPoint(1,:), promisedPoint(2,:)];
                         
             % Plot
-            if (height(points) > 0)
-                plot3(points(:,1), points(:,2), points(:,3),'-r*','LineWidth',2);
+            if (height(promisedPoints) > 0)
+                plot3(promisedPoints(:,1), promisedPoints(:,2), promisedPoints(:,3),'-r*','LineWidth',2);
             end
             x = 0;
             
         end
         
         % Inspect a line between two nodes and evaluate if a point exists
-        function points = getSlicePoint(obj, point1, point2, currZ)
+        function promisedPoints = getSlicePoint(obj, point1, point2, currZ)
         % Generates a point for a given line between two points
             
             % Create Null Array
-            points = zeros(0);
+            promisedPoints = zeros(0);
         
             % Parse the Point Data
             x1 = point1(1,1);
@@ -130,13 +147,13 @@ classdef FlatUniformSliceGenerator < handle
                 
                 % If the line sits on the plane, add both end coordinates
                 if (z1 == z2)
-                    points = [points; x1, y1, currZ];      
+                    promisedPoints = [promisedPoints; x1, y1, currZ; x2, y2, currZ];      
                 % Otherwise, if not horizontal, determine the cut point
                 else
                     X = x1 + ((z1-currZ)/(z1-z2))*(x2-x1);
                     Y = y1 + ((z1-currZ)/(z1-z2))*(y2-y1);
                     Z = currZ;
-                    points = [points; X, Y, Z];
+                    promisedPoints = [promisedPoints; X, Y, Z];
                 end
 
             end
@@ -168,9 +185,6 @@ classdef FlatUniformSliceGenerator < handle
         end
     end
     
-    methods (Access = protected)
-        
-    end
     
 end
 
