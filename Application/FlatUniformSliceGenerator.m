@@ -11,9 +11,9 @@ classdef FlatUniformSliceGenerator
         
         % The Connectivity List defining the nodes of each Element, and the
         % points which represent the coordinate of each node.
-        connectivityList(:,3) double
+        connectivityList(:,:) double
         numOfElements int64
-        points(:,3) int64
+        points(:,:) int64
         
         % The Uniform Slice Thickness for each slice - default is 0.2
         sliceThickness = 0.2;
