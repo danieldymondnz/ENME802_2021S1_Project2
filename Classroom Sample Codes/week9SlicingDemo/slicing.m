@@ -1,12 +1,15 @@
 % Import data from Cube Excel Spreadsheet
 clear all
 clc
-n_element = xlsread('cube.xlsx', 1, 'A2');
-n_nodes = xlsread('cube.xlsx', 1, 'B2');
-ncon = xlsread('cube.xlsx', 1, 'C2:E49');
-X = xlsread('cube.xlsx', 1, 'F2:F55');
-Y = xlsread('cube.xlsx', 1, 'G2:G55');
-Z = xlsread('cube.xlsx', 1, 'H2:H55');
+
+stl1 = stlread("Test Objects\Box.STL");
+
+X = stl1.Points(:,1);
+Y = stl1.Points(:,2);
+Z = stl1.Points(:,3);
+ncon = stl1.ConnectivityList;
+n_element = height(ncon);
+n_nodes = height(X);
 
 % Create a For Loop to loop through all elements for verification
 for i=1:n_element
@@ -149,6 +152,7 @@ plot3(XP,YP,ZP,'-r*','LineWidth',2);
 view(3);
 hold on
 
+return
 figure(3)
 patch(XP,YP,ZP,'r')
 view(3);

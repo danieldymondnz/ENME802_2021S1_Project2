@@ -73,6 +73,7 @@ classdef FlatUniformSliceGenerator < handle
                 points = [points; sliceElement(obj, element, zHeight)];
                 
             end
+
             
         end
          
@@ -100,6 +101,13 @@ classdef FlatUniformSliceGenerator < handle
             point2 = elementVertices(1, :);
             points = [points; getSlicePoint(obj, point1, point2, zHeight)];
             
+                        
+            % Plot
+            if (height(points) > 0)
+                plot3(points(:,1), points(:,2), points(:,3),'-r*','LineWidth',2);
+            end
+            x = 0;
+            
         end
         
         % Inspect a line between two nodes and evaluate if a point exists
@@ -122,25 +130,17 @@ classdef FlatUniformSliceGenerator < handle
                 
                 % If the line sits on the plane, add both end coordinates
                 if (z1 == z2)
-                    points = [points; x1, y1, z1];
-                    %points = [points; x2, y2, z2];
-                    plot3(x1,y1,z1,'-r*','LineWidth',2)
-                    hold on
-            
+                    points = [points; x1, y1, currZ];      
                 % Otherwise, if not horizontal, determine the cut point
                 else
                     X = x1 + ((z1-currZ)/(z1-z2))*(x2-x1);
                     Y = y1 + ((z1-currZ)/(z1-z2))*(y2-y1);
                     Z = currZ;
                     points = [points; X, Y, Z];
-                    plot3(X,Y,Z,'-r*','LineWidth',2)
-                    hold on
                 end
 
             end
-            
-            
-            
+  
         end
         
         % Obtain the X,Y,Z Coordinate for each node of an element object
