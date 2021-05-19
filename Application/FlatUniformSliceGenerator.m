@@ -69,6 +69,7 @@ classdef FlatUniformSliceGenerator < handle
             % Instantiate Objects to store Points and Paths
             slicePaths = zeros(0);
             specialPoints = zeros(0);
+            points = zeros(0);
             
             % Slice each element and inspect
             for element = 1:obj.numOfElements
@@ -101,13 +102,24 @@ classdef FlatUniformSliceGenerator < handle
             % However, some repeated paths may exist. Tesselate Paths
             % together.
             
+            % Remove Duplicate Paths or Paths which start and end at same
+            % point on plane.
+            promisedPairsFlipped = [slicePaths(:,4:6), slicePaths(:,1:3)];
+            [~,a,b] = intersect(slicePaths,promisedPairsFlipped,'rows');
+            removed = setxor(b,a);
+            slicePaths(removed',:) = [];
             
-            points = sortPromisedPairsToPath(obj, slicePaths);
+            currentPath = 0;
+            while (height(slicePaths) > 0)
+                currentPath = currentPath + 1;
+                [resultingPath, slicePaths] = sortPromisedPairsToPath(obj, slicePaths, currentPath);
+                points = [points; resultingPath];
+            end
             
         end
         
         % RECUSRSION TO CLEAN
-        function path = sortPromisedPairsToPath(obj, slicePaths)
+        function [path, slicePaths] = sortPromisedPairsToPath(obj, slicePaths, currentPathNumber)
         
             % Get the total number of Slice Paths on plane
             numPromisePairs = height(slicePaths);
@@ -122,19 +134,12 @@ classdef FlatUniformSliceGenerator < handle
                 return
             end
 
-            % Remove Duplicate Paths or Paths which start and end at same
-            % point on plane.
-            promisedPairsFlipped = [slicePaths(:,4:6), slicePaths(:,1:3)];
-            [~,a,b] = intersect(slicePaths,promisedPairsFlipped,'rows');
-            removed = setxor(b,a);
-            slicePaths(removed',:) = [];
-
             % Start with original point
-            path = [slicePaths(1, 1:3)]; %; promisedPairs(1, 4:6)];
+            path = [slicePaths(1, 1:3), currentPathNumber]; %; promisedPairs(1, 4:6)];
             
             % Sort the remainder
-            pathSort = sortPromisedPairsToPathRecursion(obj, slicePaths, path, 1);
-            path = [pathSort];
+            [resultingPath, slicePaths] = sortPromisedPairsToPathRecursion(obj, slicePaths, path, currentPathNumber);
+            path = [resultingPath];
             path = [path; path(1,:)];
         end
         
@@ -148,13 +153,17 @@ classdef FlatUniformSliceGenerator < handle
                
                 % If start of final line if at end, append
                 if (abs(resultingPath(end,1) - remainingPaths(end,1)) < obj.slicerTol && abs(resultingPath(end,2) - remainingPaths(end,2)) < obj.slicerTol)
-                    returnPath = remainingPaths(1, 4:6);
+                    returnPath = [remainingPaths(1, 4:6), currentPathNumber];
+                    
                     
                 % Otherwise, return opposite end
                 else
-                    returnPath = remainingPaths(1, 1:3);
+                    returnPath = [remainingPaths(1, 1:3), currentPathNumber];
                 end
             
+                remainingPaths(1,:) = [];
+                
+                
             % Otherwise, sort the remainder
             else
                 
@@ -172,12 +181,12 @@ classdef FlatUniformSliceGenerator < handle
                     % this line, then append the end point of this line to
                     % the path
                     if (abs(xE - x) < obj.slicerTol && abs(yE - y) < obj.slicerTol) %(xE == x && yE == y)
-                        returnPath = remainingPaths(i, 4:6);
+                        returnPath = [remainingPaths(i, 4:6), currentPathNumber];
                         remainingPaths(i,:) = [];
                         %returnPath = [sortPromisedPairsToPathRecursion(obj, remainingPromisedPairs, [currentPath; returnPath]); returnPath];
                         
                         resultingPath = [resultingPath; returnPath];
-                        resultingPath = sortPromisedPairsToPathRecursion(obj, remainingPaths, resultingPath);
+                        [resultingPath, remainingPaths] = sortPromisedPairsToPathRecursion(obj, remainingPaths, resultingPath, currentPathNumber);
                         return
                     end
                     
@@ -185,11 +194,11 @@ classdef FlatUniformSliceGenerator < handle
                     % this line, then flip the lines direction and append
                     % the end to the beginning of the returnpath
                     if (abs(xS - x) < obj.slicerTol && abs(yS - y) < obj.slicerTol) %(xS == x && yS == y)
-                        returnPath = remainingPaths(i, 4:6);
+                        returnPath = [remainingPaths(i, 4:6), currentPathNumber];
                         remainingPaths(i,:) = [];
 %                         returnPath = [returnPath; sortPromisedPairsToPathRecursion(obj, remainingPromisedPairs, [returnPath; currentPath]);];
                         resultingPath = [returnPath; resultingPath];
-                        resultingPath = sortPromisedPairsToPathRecursion(obj, remainingPaths, resultingPath);
+                        [resultingPath, remainingPaths] = sortPromisedPairsToPathRecursion(obj, remainingPaths, resultingPath, currentPathNumber);
                         return 
                     end
                     
@@ -201,11 +210,11 @@ classdef FlatUniformSliceGenerator < handle
                     % this line, then flip the lines direction and 
                     % append the start to the path
                     if (abs(xE - x) < obj.slicerTol && abs(yE - y) < obj.slicerTol) %(xE == x && yE == y)
-                        returnPath = remainingPaths(i, 1:3);
+                        returnPath = [remainingPaths(i, 1:3), currentPathNumber];
                         remainingPaths(i,:) = [];
                         %returnPath = [sortPromisedPairsToPathRecursion(obj, remainingPromisedPairs, [currentPath; returnPath]); returnPath];
                         resultingPath = [resultingPath; returnPath];
-                        resultingPath = sortPromisedPairsToPathRecursion(obj, remainingPaths, resultingPath);
+                        [resultingPath, remainingPaths] = sortPromisedPairsToPathRecursion(obj, remainingPaths, resultingPath, currentPathNumber);
                         return  
                     end
                     
@@ -218,12 +227,12 @@ classdef FlatUniformSliceGenerator < handle
 %                         remainingPromisedPairs(i,:) = [];
 %                         returnPath = [returnPath; sortPromisedPairsToPathRecursion(obj, remainingPromisedPairs, [currentPath; returnPath])];
                         
-                        returnPath = remainingPaths(i, 1:3);
+                        returnPath = [remainingPaths(i, 1:3), currentPathNumber];
                         remainingPaths(i,:) = [];
                         %returnPath = [returnPath; sortPromisedPairsToPathRecursion(obj, remainingPromisedPairs, [returnPath; currentPath])];
                         
                         resultingPath = [returnPath; resultingPath];
-                        resultingPath = sortPromisedPairsToPathRecursion(obj, remainingPaths, resultingPath);
+                        [resultingPath, remainingPaths] = sortPromisedPairsToPathRecursion(obj, remainingPaths, resultingPath, currentPathNumber);
                         
                         return
                         
@@ -234,7 +243,7 @@ classdef FlatUniformSliceGenerator < handle
                 % If points remain that cannot be added, then a new path is
                 % needed
                    
-                resultingPath = [resultingPath; sortPromisedPairsToPath(obj, remainingPaths)];
+                % resultingPath = [resultingPath; sortPromisedPairsToPath(obj, remainingPaths, currentPathNumber)];
                     
                 
                 
