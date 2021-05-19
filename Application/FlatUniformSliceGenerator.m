@@ -251,17 +251,11 @@ classdef FlatUniformSliceGenerator < handle
                     
                 end
                 
-                % Wrap the return path such that more elements can be
-                % appended
-                for i = 1:height(returnPath)
+                % If points remain that cannot be added, then a new path is
+                % needed
                    
-                    % If works, then 
+                currentPath = [currentPath; sortPromisedPairsToPath(obj, remainingPromisedPairs)];
                     
-                end
-                
-                % If not possible, create new recursion
-                
-                returnPath = zeros(0);
                 
                 
             end
