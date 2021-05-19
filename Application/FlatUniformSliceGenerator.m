@@ -22,7 +22,7 @@ classdef FlatUniformSliceGenerator < handle
         slicePath %(:,3) double
         
         % Accuracy of slicer
-        slicerTol = 0.01;
+        slicerTol = 0.0000001;
         
     end
     
@@ -34,7 +34,6 @@ classdef FlatUniformSliceGenerator < handle
             obj.numOfElements = height(obj.connectivityList);
             obj.points = data.Points;
             obj.sliceThickness = preferedThickness;
-            obj.slicerTol = 0.01;
         end
         
         % Gets the X, Y, Z Coordinates of the slice path
@@ -102,12 +101,31 @@ classdef FlatUniformSliceGenerator < handle
             % However, some repeated paths may exist. Tesselate Paths
             % together.
             
+            % Remove paths which start and end at the same point
+            rowsToRemove = zeros(0);
+            for i=1:height(slicePaths)
+               
+                if slicePaths(i,1) == slicePaths(i,4) && slicePaths(i,2) == slicePaths(i,5) && slicePaths(i,3) == slicePaths(i,6)
+                    rowsToRemove = [rowsToRemove; i];
+                end
+
+            end
+            slicePaths(rowsToRemove,:) = [];
+            
             % Remove Duplicate Paths or Paths which start and end at same
             % point on plane.
-            promisedPairsFlipped = [slicePaths(:,4:6), slicePaths(:,1:3)];
-            [~,a,b] = intersect(slicePaths,promisedPairsFlipped,'rows');
-            removed = setxor(b,a);
-            slicePaths(removed',:) = [];
+            % Remove Flipped Paths
+% %             promisedPairsFlipped = [slicePaths(:,4:6), slicePaths(:,1:3)];
+% %             [~,a,b] = intersect(slicePaths,promisedPairsFlipped,'rows');
+% %             removed = setxor(b,a);
+% %             slicePaths(removed',:) = [];
+            
+            % For each
+            
+                % If Point A & Point B are the same, delete
+                
+                % If Point A & B in normal matches point C & D in the
+                % former
             
             currentPath = 0;
             while (height(slicePaths) > 0)
