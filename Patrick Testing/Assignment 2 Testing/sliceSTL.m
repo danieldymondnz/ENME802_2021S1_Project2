@@ -1,4 +1,4 @@
-function sliceSTL(X,Y,Z,connections,planeEquation)
+function sliceSTL(X,Y,Z,connections,planeEquation,inc)
 zmax = max(Z);
 Intercepts1 = zeros(3);
 Intercepts2 = zeros(3);
@@ -8,9 +8,9 @@ counter2 = 1;
 counter3 = 1;
 sliceHeight = 0;
 %go through all points until hits zmax
-for j = 1:zmax/5-1
+for j = 0:(zmax/inc)
     syms t x y z k;
-    sliceHeight = sliceHeight+5;
+    sliceHeight = sliceHeight+inc;
     for i=1:height(connections)
     %find equations for line 1 of triangle pts(1,2)
     line1X1 = X(connections(i,1));
@@ -58,8 +58,8 @@ for j = 1:zmax/5-1
     
     
     
-    %PLOT P1 AND P2 HERE TO SEE
-    figure(1)
+    %PLOT LINES HERE TO SEE
+    figure(2)
     view(3)
     hold on;
     
@@ -144,7 +144,7 @@ for j = 1:zmax/5-1
     end
     
     if ( ~isempty(xIntercept3) || ~isempty(yIntercept3) || ~isempty(zIntercept3) )
-        Intercepts3(counter3,1) = xIntercept3;
+        Intercepts3(counter3,1) = xIntercept3; 
         Intercepts3(counter3,2) = yIntercept3;
         Intercepts3(counter3,3) = zIntercept3;
         counter3 = counter3 + 1;
@@ -153,14 +153,14 @@ for j = 1:zmax/5-1
     end
     
 %     disp(sliceHeight)
-figure(1);
-hold on;
-view(3);
-scatter3(Intercepts1(:,1),Intercepts1(:,2),Intercepts1(:,3));
-scatter3(Intercepts2(:,1),Intercepts2(:,2),Intercepts2(:,3));  
-scatter3(Intercepts3(:,1),Intercepts3(:,2),Intercepts3(:,3));  
+    figure(1);
+    hold on;
+    view(3);
+    scatter3(Intercepts1(:,1),Intercepts1(:,2),Intercepts1(:,3));
+    scatter3(Intercepts2(:,1),Intercepts2(:,2),Intercepts2(:,3));  
+    scatter3(Intercepts3(:,1),Intercepts3(:,2),Intercepts3(:,3));  
 
 end
-    
+
 
 end
