@@ -133,51 +133,55 @@ classdef FlatUniformSliceGenerator < handle
             path = [slicePaths(1, 1:3)]; %; promisedPairs(1, 4:6)];
             
             % Sort the remainder
-            pathSort = sortPromisedPairsToPathRecursion(obj, slicePaths, path, 1);
+            pathSort = sortPromisedPairsToPathRecursion(obj, slicePaths, path);
             path = [pathSort];
             path = [path; path(1,:)];
         end
         
-        function [resultingPath, remainingPaths] = sortPromisedPairsToPathRecursion(obj, remainingPaths, resultingPath, currentPathNumber)
+        function currentPath = sortPromisedPairsToPathRecursion(obj, remainingPromisedPairs, currentPath)
             
             % Deifne
             returnPath = zeros(0);
             
-            % If the remaining pairs in subset is 1, add the final line
-            if height(remainingPaths) == 1
+            % If the remaining pairs in subset is 1, connect line
+            if height(remainingPromisedPairs) == 1
                
                 % If start of final line if at end, append
-                if (abs(resultingPath(end,1) - remainingPaths(end,1)) < obj.slicerTol && abs(resultingPath(end,2) - remainingPaths(end,2)) < obj.slicerTol)
-                    returnPath = remainingPaths(1, 4:6);
+                if (abs(currentPath(end,1) - remainingPromisedPairs(end,1)) < obj.slicerTol && abs(currentPath(end,2) - remainingPromisedPairs(end,2)) < obj.slicerTol)
+                    returnPath = remainingPromisedPairs(1, 4:6);
                     
                 % Otherwise, return opposite end
                 else
-                    returnPath = remainingPaths(1, 1:3);
+                    returnPath = remainingPromisedPairs(1, 1:3);
                 end
+                
+                % Otherwise, flip line
+
+                %returnPath = [remainingPromisedPairs(1, 1:3); remainingPromisedPairs(1, 4:6)];
             
             % Otherwise, sort the remainder
             else
                 
                 % Find the next point which matches the current end of path
-                xE = resultingPath(end, 1); xS = resultingPath(1, 1);
-                yE = resultingPath(end, 2); yS = resultingPath(1, 2);
+                xE = currentPath(end, 1); xS = currentPath(1, 1);
+                yE = currentPath(end, 2); yS = currentPath(1, 2);
                 
-                for i = 1:height(remainingPaths)
+                for i = 1:height(remainingPromisedPairs)
                 
                     % Check the start coordinates of this line                    
-                    x = remainingPaths(i, 1);
-                    y = remainingPaths(i, 2);
+                    x = remainingPromisedPairs(i, 1);
+                    y = remainingPromisedPairs(i, 2);
                     
                     % If the end of the returnPath matches the start of
                     % this line, then append the end point of this line to
                     % the path
                     if (abs(xE - x) < obj.slicerTol && abs(yE - y) < obj.slicerTol) %(xE == x && yE == y)
-                        returnPath = remainingPaths(i, 4:6);
-                        remainingPaths(i,:) = [];
+                        returnPath = remainingPromisedPairs(i, 4:6);
+                        remainingPromisedPairs(i,:) = [];
                         %returnPath = [sortPromisedPairsToPathRecursion(obj, remainingPromisedPairs, [currentPath; returnPath]); returnPath];
                         
-                        resultingPath = [resultingPath; returnPath];
-                        resultingPath = sortPromisedPairsToPathRecursion(obj, remainingPaths, resultingPath);
+                        currentPath = [currentPath; returnPath];
+                        currentPath = sortPromisedPairsToPathRecursion(obj, remainingPromisedPairs, currentPath);
                         return
                     end
                     
@@ -185,27 +189,27 @@ classdef FlatUniformSliceGenerator < handle
                     % this line, then flip the lines direction and append
                     % the end to the beginning of the returnpath
                     if (abs(xS - x) < obj.slicerTol && abs(yS - y) < obj.slicerTol) %(xS == x && yS == y)
-                        returnPath = remainingPaths(i, 4:6);
-                        remainingPaths(i,:) = [];
+                        returnPath = remainingPromisedPairs(i, 4:6);
+                        remainingPromisedPairs(i,:) = [];
 %                         returnPath = [returnPath; sortPromisedPairsToPathRecursion(obj, remainingPromisedPairs, [returnPath; currentPath]);];
-                        resultingPath = [returnPath; resultingPath];
-                        resultingPath = sortPromisedPairsToPathRecursion(obj, remainingPaths, resultingPath);
+                        currentPath = [returnPath; currentPath];
+                        currentPath = sortPromisedPairsToPathRecursion(obj, remainingPromisedPairs, currentPath);
                         return 
                     end
                     
                     % Check the end coordinates of this line
-                    x = remainingPaths(i, 4);
-                    y = remainingPaths(i, 5);
+                    x = remainingPromisedPairs(i, 4);
+                    y = remainingPromisedPairs(i, 5);
                     
                     % If the end of the returnPath matches the end of
                     % this line, then flip the lines direction and 
                     % append the start to the path
                     if (abs(xE - x) < obj.slicerTol && abs(yE - y) < obj.slicerTol) %(xE == x && yE == y)
-                        returnPath = remainingPaths(i, 1:3);
-                        remainingPaths(i,:) = [];
+                        returnPath = remainingPromisedPairs(i, 1:3);
+                        remainingPromisedPairs(i,:) = [];
                         %returnPath = [sortPromisedPairsToPathRecursion(obj, remainingPromisedPairs, [currentPath; returnPath]); returnPath];
-                        resultingPath = [resultingPath; returnPath];
-                        resultingPath = sortPromisedPairsToPathRecursion(obj, remainingPaths, resultingPath);
+                        currentPath = [currentPath; returnPath];
+                        currentPath = sortPromisedPairsToPathRecursion(obj, remainingPromisedPairs, currentPath);
                         return  
                     end
                     
@@ -218,12 +222,12 @@ classdef FlatUniformSliceGenerator < handle
 %                         remainingPromisedPairs(i,:) = [];
 %                         returnPath = [returnPath; sortPromisedPairsToPathRecursion(obj, remainingPromisedPairs, [currentPath; returnPath])];
                         
-                        returnPath = remainingPaths(i, 1:3);
-                        remainingPaths(i,:) = [];
+                        returnPath = remainingPromisedPairs(i, 1:3);
+                        remainingPromisedPairs(i,:) = [];
                         %returnPath = [returnPath; sortPromisedPairsToPathRecursion(obj, remainingPromisedPairs, [returnPath; currentPath])];
                         
-                        resultingPath = [returnPath; resultingPath];
-                        resultingPath = sortPromisedPairsToPathRecursion(obj, remainingPaths, resultingPath);
+                        currentPath = [returnPath; currentPath];
+                        currentPath = sortPromisedPairsToPathRecursion(obj, remainingPromisedPairs, currentPath);
                         
                         return
                         
@@ -234,7 +238,7 @@ classdef FlatUniformSliceGenerator < handle
                 % If points remain that cannot be added, then a new path is
                 % needed
                    
-                resultingPath = [resultingPath; sortPromisedPairsToPath(obj, remainingPaths)];
+                currentPath = [currentPath; sortPromisedPairsToPath(obj, remainingPromisedPairs)];
                     
                 
                 
