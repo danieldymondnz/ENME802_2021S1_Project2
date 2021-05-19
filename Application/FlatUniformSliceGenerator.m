@@ -129,8 +129,12 @@ classdef FlatUniformSliceGenerator < handle
             end
             
             % Remove Duplicate Paths
-            [~,uPP] = unique(promisedPairs , 'rows');
-            promisedPairs = promisedPairs(uPP,:);
+%             [~,a,b] = intersect(promisedPairs(:,1:3),promisedPairs(:,4:6),'rows');
+%             removed = setxor(b,a);
+%             promisedPairs(removed',:) = [];
+            
+%             [~,uPP] = unique(promisedPairs , 'rows');
+%             promisedPairs = promisedPairs(uPP,:);
             
             % Remove Dupliate Paths in flipped array
             promisedPairsFlipped = [promisedPairs(:,4:6), promisedPairs(:,1:3)];
@@ -150,16 +154,25 @@ classdef FlatUniformSliceGenerator < handle
             path = [path; path(1,:)];
         end
         
-        function returnPath = sortPromisedPairsToPathRecursion(obj, remainingPromisedPairs, currentPath)
+        function currentPath = sortPromisedPairsToPathRecursion(obj, remainingPromisedPairs, currentPath)
             
             % Deifne
             returnPath = zeros(0);
             
-            % If the remaining pairs in subset is 1, just return the
-            % current pair
-            if height(remainingPromisedPairs) == 0
-                return
+            % If the remaining pairs in subset is 1, connect line
+            if height(remainingPromisedPairs) == 1
+               
+                % If start of final line if at end, append
+                if (abs(currentPath(end,1) - remainingPromisedPairs(end,1)) < obj.slicerTol && abs(currentPath(end,2) - remainingPromisedPairs(end,2)) < obj.slicerTol)
+                    returnPath = remainingPromisedPairs(1, 4:6);
+                    
+                % Otherwise, return opposite end
+                else
+                    returnPath = remainingPromisedPairs(1, 1:3);
+                end
                 
+                % Otherwise, flip line
+
                 %returnPath = [remainingPromisedPairs(1, 1:3); remainingPromisedPairs(1, 4:6)];
             
             % Otherwise, sort the remainder
@@ -181,7 +194,10 @@ classdef FlatUniformSliceGenerator < handle
                     if (abs(xE - x) < obj.slicerTol && abs(yE - y) < obj.slicerTol) %(xE == x && yE == y)
                         returnPath = remainingPromisedPairs(i, 4:6);
                         remainingPromisedPairs(i,:) = [];
-                        returnPath = [returnPath; sortPromisedPairsToPathRecursion(obj, remainingPromisedPairs, [returnPath; currentPath])];
+                        %returnPath = [sortPromisedPairsToPathRecursion(obj, remainingPromisedPairs, [currentPath; returnPath]); returnPath];
+                        
+                        currentPath = [currentPath; returnPath];
+                        currentPath = sortPromisedPairsToPathRecursion(obj, remainingPromisedPairs, currentPath);
                         return
                     end
                     
@@ -191,7 +207,9 @@ classdef FlatUniformSliceGenerator < handle
                     if (abs(xS - x) < obj.slicerTol && abs(yS - y) < obj.slicerTol) %(xS == x && yS == y)
                         returnPath = remainingPromisedPairs(i, 4:6);
                         remainingPromisedPairs(i,:) = [];
-                        returnPath = [sortPromisedPairsToPathRecursion(obj, remainingPromisedPairs, [currentPath; returnPath]); returnPath];
+%                         returnPath = [returnPath; sortPromisedPairsToPathRecursion(obj, remainingPromisedPairs, [returnPath; currentPath]);];
+                        currentPath = [returnPath; currentPath];
+                        currentPath = sortPromisedPairsToPathRecursion(obj, remainingPromisedPairs, currentPath);
                         return 
                     end
                     
@@ -205,7 +223,9 @@ classdef FlatUniformSliceGenerator < handle
                     if (abs(xE - x) < obj.slicerTol && abs(yE - y) < obj.slicerTol) %(xE == x && yE == y)
                         returnPath = remainingPromisedPairs(i, 1:3);
                         remainingPromisedPairs(i,:) = [];
-                        returnPath = [sortPromisedPairsToPathRecursion(obj, remainingPromisedPairs, [currentPath; returnPath]); returnPath];
+                        %returnPath = [sortPromisedPairsToPathRecursion(obj, remainingPromisedPairs, [currentPath; returnPath]); returnPath];
+                        currentPath = [currentPath; returnPath];
+                        currentPath = sortPromisedPairsToPathRecursion(obj, remainingPromisedPairs, currentPath);
                         return  
                     end
                     
@@ -220,7 +240,10 @@ classdef FlatUniformSliceGenerator < handle
                         
                         returnPath = remainingPromisedPairs(i, 1:3);
                         remainingPromisedPairs(i,:) = [];
-                        returnPath = [returnPath; sortPromisedPairsToPathRecursion(obj, remainingPromisedPairs, [returnPath; currentPath])];
+                        %returnPath = [returnPath; sortPromisedPairsToPathRecursion(obj, remainingPromisedPairs, [returnPath; currentPath])];
+                        
+                        currentPath = [returnPath; currentPath];
+                        currentPath = sortPromisedPairsToPathRecursion(obj, remainingPromisedPairs, currentPath);
                         
                         return
                         
@@ -307,7 +330,7 @@ classdef FlatUniformSliceGenerator < handle
             % If there is only one intersectingPoint stored, this is the
             % only touching element on this plane - return for analysis
             elseif height(intersectingPoints) == 1
-                paths = [intersectingPoints, 0, 0, 0];
+                paths = [intersectingPoints, interestingPoints];
             end
             
             % Otherwise, there is just a single path touching the plane -
