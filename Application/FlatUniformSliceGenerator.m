@@ -138,16 +138,16 @@ classdef FlatUniformSliceGenerator < handle
             removed = setxor(b,a);
             promisedPairs(removed',:) = [];
 
-            
             % Start with original point
-            path = [promisedPairs(1, 1:3); promisedPairs(1, 4:6)];
+            path = [promisedPairs(1, 1:3)]; %; promisedPairs(1, 4:6)];
             
             % Remove first point and sort remaining promises
-            promisedPairs(1,:) = [];
+            %promisedPairs(1,:) = [];
             
             % Sort the remainder
-            path = [path; sortPromisedPairsToPathRecursion(obj, promisedPairs, path)];
-            
+            pathSort = sortPromisedPairsToPathRecursion(obj, promisedPairs, path);
+            path = [pathSort];
+            path = [path; path(1,:)];
         end
         
         function returnPath = sortPromisedPairsToPathRecursion(obj, remainingPromisedPairs, currentPath)
@@ -181,7 +181,7 @@ classdef FlatUniformSliceGenerator < handle
                     if (abs(xE - x) < obj.slicerTol && abs(yE - y) < obj.slicerTol) %(xE == x && yE == y)
                         returnPath = remainingPromisedPairs(i, 4:6);
                         remainingPromisedPairs(i,:) = [];
-                        returnPath = [returnPath; sortPromisedPairsToPathRecursion(obj, remainingPromisedPairs, [currentPath; returnPath])];
+                        returnPath = [returnPath; sortPromisedPairsToPathRecursion(obj, remainingPromisedPairs, [returnPath; currentPath])];
                         return
                     end
                     
@@ -205,7 +205,7 @@ classdef FlatUniformSliceGenerator < handle
                     if (abs(xE - x) < obj.slicerTol && abs(yE - y) < obj.slicerTol) %(xE == x && yE == y)
                         returnPath = remainingPromisedPairs(i, 1:3);
                         remainingPromisedPairs(i,:) = [];
-                        returnPath = [returnPath; sortPromisedPairsToPathRecursion(obj, remainingPromisedPairs, [currentPath; returnPath])];
+                        returnPath = [sortPromisedPairsToPathRecursion(obj, remainingPromisedPairs, [currentPath; returnPath]); returnPath];
                         return  
                     end
                     
@@ -220,7 +220,7 @@ classdef FlatUniformSliceGenerator < handle
                         
                         returnPath = remainingPromisedPairs(i, 1:3);
                         remainingPromisedPairs(i,:) = [];
-                        returnPath = [sortPromisedPairsToPathRecursion(obj, remainingPromisedPairs, [currentPath; returnPath]); returnPath];
+                        returnPath = [returnPath; sortPromisedPairsToPathRecursion(obj, remainingPromisedPairs, [returnPath; currentPath])];
                         
                         return
                         
