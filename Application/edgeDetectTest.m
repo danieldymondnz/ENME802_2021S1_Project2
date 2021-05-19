@@ -1,15 +1,77 @@
-stl1 = stlread("Test Objects\weirdShape.STL");
+function edgeDetectTest(op)
+% Find unique z axis'
+[C,ia,~] = unique(op(:,3));
+for i=1:height(ia)-1
+    X=op(ia(i):ia(i+1)-1,1);
+    Y=op(ia(i):ia(i+1)-1,2);
+    
+    [C2,ia2,~]=unique([X Y],'rows');
 
-% % Rotated stl
-% rotatedSTL = stlRotate(stl1);
-% rotatedSGO = FlatUniformSliceGenerator(rotatedSTL,20);
-% rotatedSGO.generateSlices();
-% op2 = rotatedSGO.getSlicePath();
-test = [19,14;19,14;19,14;2,14;2,14;25,11;25,11;25,11;19,14;19,14;22,8;22,8;22,8;25,11;25,11;26,3;26,3;26,3;22,8;22,8;55,1;55,1;55,1;26,3;26,3;59,5;59,5;59,5;55,1;55,1;66,9;66,9;66,9;59,5;59,5;66,5;66,5;66,5;66,9;66,9;72,2;72,2;72,2;66,5;66,5;75,0;75,0;75,0;72,2;72,2;75,120;75,120;75,120;75,0;75,0;58,83;58,83;58,83;75,120;75,120;40,98;40,98;40,98;58,83;58,83;19,87;19,87;19,87;40,98;40,98;14,92;14,92;14,92;19,87;19,87;0,67;0,67;0,67;14,92;14,92;9,21;9,21;9,21;0,67;0,67;2,14;2,14;2,14;9,21;9,21;72,2;66,5;66,9;25,11;66,9;59,5;19,87;40,98;58,83;59,5;55,1;25,11;25,11;55,1;26,3;25,11;26,3;22,8;2,14;9,21;19,14;19,14;9,21;25,11;0,67;14,92;9,21;9,21;14,92;19,87;9,21;19,87;25,11;25,11;19,87;58,83;25,11;58,83;66,9;66,9;58,83;75,120;66,9;75,120;72,2;72,2;75,120;75,0];
+    for j=1:height(ia2)
+        % append unique stuff back
+        opUnique(j,1) = X(ia2(j),1);
+        opUnique(j,2) = Y(ia2(j),1);
+    end
 
-[C,ia,~]=unique(test);
+    X = opUnique(:,1);
+    Y = opUnique(:,2);
 
-for i=1:height(ia)
-    % append unique stuff back
-    testUnique(i,1) = test(ia(i),i);
+%     XCenter = mean(X);
+%     YCenter = mean(Y);
+%     angles = atan2d((Y-YCenter) , (X-XCenter));
+% 
+%     [~, sortIndexes] = sort(angles);
+%     X = X(sortIndexes);  % Reorder x and y with the new sort order.
+%     Y = Y(sortIndexes);
+%     
+    X(end+1,1) = X(1);
+    Y(end+1,1) = Y(1);
+    Z = zeros(height(X));
+    Z(:) = C(i);
+
+    hold on
+    plot3(X,Y,Z);
+    
+    % Do last layer
+    if i == height(ia)-1
+        X = op(ia(end):height(op),1);
+        Y = op(ia(end):height(op),2);
+        
+        [C2,ia2,~]=unique([X Y],'rows');
+        opUnique = [];
+        for j=1:height(ia2)
+            % append unique stuff back
+            opUnique(j,1) = X(ia2(j),1);
+            opUnique(j,2) = Y(ia2(j),1);
+        end
+        
+        X = opUnique(:,1);
+        Y = opUnique(:,2);
+
+%         XCenter = mean(X);
+%         YCenter = mean(Y);
+%         angles = atan2d((Y-YCenter) , (X-XCenter));
+% 
+%         ~, sortIndexes] = sort(angles);
+%         X = X(sortIndexes);  % Reorder x and y with the new sort order.
+%         Y = Y(sortIndexes);[
+
+        X(end+1,1) = X(1);
+        Y(end+1,1) = Y(1);
+        Z = zeros(height(X));
+        Z(:) = C(end);
+        
+        hold on
+        plot3(X,Y,Z);
+
+        
+    end
+
+        
+        
+    end
+
+
+
+
 end
