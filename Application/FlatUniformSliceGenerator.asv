@@ -26,7 +26,7 @@ classdef FlatUniformSliceGenerator < handle
         
     end
     
-    methods
+    methods (Access = public)
         
         % Create an instance using Triangulation Data
         function obj = FlatUniformSliceGenerator(data, preferedThickness)
@@ -40,7 +40,6 @@ classdef FlatUniformSliceGenerator < handle
         function slicePath = getSlicePath(obj)
             slicePath = obj.slicePath;
         end
-        
         
         function obj = generateSlicePath(obj)
         % Generate the full slice path for all layers of this object
@@ -113,20 +112,7 @@ classdef FlatUniformSliceGenerator < handle
             end
             slicePaths(rowsToRemove,:) = [];
             
-            % Remove Duplicate Paths or Paths which start and end at same
-            % point on plane.
-            % Remove Flipped Paths
-% %             promisedPairsFlipped = [slicePaths(:,4:6), slicePaths(:,1:3)];
-% %             [~,a,b] = intersect(slicePaths,promisedPairsFlipped,'rows');
-% %             removed = setxor(b,a);
-% %             slicePaths(removed',:) = [];
-            
-            % For each
-            
-                % If Point A & Point B are the same, delete
-                
-                % If Point A & B in normal matches point C & D in the
-                % former
+            % Create paths
             
             currentPath = 0;
             while (height(slicePaths) > 0)
@@ -170,29 +156,32 @@ classdef FlatUniformSliceGenerator < handle
             % Deifne
             returnPath = zeros(0);
             
-            % If the remaining pairs in subset is 1, add the final line
+            % If the remaining pairs in subset is 1, there is only one more
+            % line - add and return the resultingPath
             if height(remainingPaths) == 1
                
                 % If start of final line if at end, append
                 if (abs(resultingPath(end,1) - remainingPaths(end,1)) < obj.slicerTol && abs(resultingPath(end,2) - remainingPaths(end,2)) < obj.slicerTol)
                     returnPath = [remainingPaths(1, 4:6), currentPathNumber];
-                    
-                    
+   
                 % Otherwise, return opposite end
                 else
                     returnPath = [remainingPaths(1, 1:3), currentPathNumber];
                 end
-            
+                
+                % Finally, clear the remainingPaths
                 remainingPaths(1,:) = [];
-                
-                
-            % Otherwise, sort the remainder
+
+            % Otherwise, sort the remainingPaths via recursion
             else
                 
-                % Find the next point which matches the current end of path
+                % Get the current start and end point of the path
+                % generated thus far
                 xE = resultingPath(end, 1); xS = resultingPath(1, 1);
                 yE = resultingPath(end, 2); yS = resultingPath(1, 2);
                 
+                % Iterate through all remainingPaths not yet assembled to
+                % find a
                 for i = 1:height(remainingPaths)
                 
                     % Check the start coordinates of this line                    
@@ -272,20 +261,83 @@ classdef FlatUniformSliceGenerator < handle
             end
             
         end
-        
-        
-        
-        
-        
-        
-        
-        
 
     end
     
     methods (Access = protected)
         
+        function paths = sliceElement(obj, elementNumber, zHeight)
+        % Inspect each element and all the point(s) which are sliced along
+        % this z position
         
+            % Initalise the matrices
+            paths = zeros(0);
+            intersectingPoints = zeros(0);
+            
+            % Parse the data for this element
+            elementVertices = getElementData(obj, elementNumber);
+            numOfVertices = height(elementVertices);
+            
+            % For each edge of the element, check to see if edge has
+            % intersect or not.
+            for edge = 1: numOfVertices
+                
+                pN1 = edge;
+                pN2 = edge + 1;
+                
+                if pN2 > numOfVertices
+                    pN2 = 1;
+                end
+                
+                point1 = elementVertices(pN1, :);
+                point2 = elementVertices(pN2, :);
+                slicedPoints = getSlicePoint(obj, point1, point2, zHeight);
+                
+                % If two points are returned, this edge lies on the plane.
+                % Append to lines
+                if height(slicedPoints) == 2
+                    paths = [paths; slicedPoints(1,:), slicedPoints(2,:)];
+                    
+                % If only a single point is returned, hold this item -
+                % either this is a triangle with two intercepting edges or
+                % 1 vertice touching the plane
+                elseif height(slicedPoints) == 1
+                    
+                    % If the item already exists, however, ignore (when
+                    % slicing through point
+                    if (height(intersectingPoints) == 0 || ~(ismember(slicedPoints(1,:), intersectingPoints, 'rows')))
+                        intersectingPoints = [intersectingPoints; slicedPoints(1,:)];
+                    end
+                    
+                end
+                % Otherwise, nothing is found on this edge - proceed to
+                % next
+                                    
+            end
+            
+            % With all edges checked, now review the geometry of this
+            % element
+            
+            % If all edges are touching the plane, than this geometry is
+            % not relevant to the overall path - return nothing
+            if height(paths) == 3
+                paths = zeros(0);
+            
+            % If there are two intersectingPoints, the line between these
+            % points will generate a path for this layer
+            elseif height(intersectingPoints) == 2 
+                paths = [intersectingPoints(1,:), intersectingPoints(2,:)];
+            
+            % If there is only one intersectingPoint stored, this is the
+            % only touching element on this plane - return for analysis
+            elseif height(intersectingPoints) == 1
+                paths = [intersectingPoints, intersectingPoints];
+            end
+            
+            % Otherwise, there is just a single path touching the plane -
+            % return existing values
+                 
+        end
         
         function intersectingVertices = getSlicePoint(obj, point1, point2, currZ)
         % Inspect a line between two vetrices and evaluate if a point exists

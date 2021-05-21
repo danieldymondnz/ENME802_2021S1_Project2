@@ -1,6 +1,6 @@
 %   Flat Uniform Slice Generator (FlatUniformSliceGenerator.m)
 %   Uses Original Code to generate equations for Slices at Uniform
-%   Thickness
+%   Thickness.
 
 classdef FlatUniformSliceGenerator < handle
     
@@ -19,14 +19,14 @@ classdef FlatUniformSliceGenerator < handle
         sliceThickness = 0.2;
         
         % Stores the slicer path points for this object
-        slicePath %(:,3) double
+        slicePath
         
         % Accuracy of slicer
         slicerTol = 1e-5;
         
     end
     
-    methods
+    methods (Access = public)
         
         % Create an instance using Triangulation Data
         function obj = FlatUniformSliceGenerator(data, preferedThickness)
@@ -36,31 +36,10 @@ classdef FlatUniformSliceGenerator < handle
             obj.sliceThickness = preferedThickness;
         end
         
-        % Gets the X, Y, Z Coordinates of the slice path
+        % Slice and return the X, Y, Z Coordinates of the slice path
         function slicePath = getSlicePath(obj)
+            generateSlicePath(obj);
             slicePath = obj.slicePath;
-        end
-        
-        
-        function obj = generateSlicePath(obj)
-        % Generate the full slice path for all layers of this object
-        
-            % Get the maximum Z height
-            maxZ = max(obj.points(:, 3));
-            currZ = 0;
-            
-            % Slice at each layer height
-            while currZ < maxZ
-                
-                % Slice at this layer and append to slice Path
-                obj.slicePath = [obj.slicePath; slicePathLayer(obj, currZ)];
-                currZ = currZ + obj.sliceThickness;
-                
-            end
-            
-            % If the end is reached, add the final layer
-            obj.slicePath = [obj.slicePath; slicePathLayer(obj, maxZ)];
-                
         end
         
         % Inspect each slice and determine elements which are cut
@@ -113,8 +92,8 @@ classdef FlatUniformSliceGenerator < handle
             end
             slicePaths(rowsToRemove,:) = [];
             
-            % Create paths
-            
+            % Create paths - continues to loop for each continuous path
+            % until all paths have been generated.
             currentPath = 0;
             while (height(slicePaths) > 0)
                 currentPath = currentPath + 1;
@@ -123,11 +102,37 @@ classdef FlatUniformSliceGenerator < handle
             end
             
         end
+          
+    end
+    
+    methods (Access = protected)
+        
+        function obj = generateSlicePath(obj)
+        % Generate the full slice path for all layers of this object
+        
+            % Get the maximum Z height
+            maxZ = max(obj.points(:, 3));
+            currZ = 0;
+            
+            % Slice at each layer height
+            while currZ < maxZ
+                
+                % Slice at this layer and append to slice Path
+                obj.slicePath = [obj.slicePath; slicePathLayer(obj, currZ)];
+                currZ = currZ + obj.sliceThickness;
+                
+            end
+            
+            % If the end is reached, add the final layer
+            obj.slicePath = [obj.slicePath; slicePathLayer(obj, maxZ)];
+                
+        end
         
         function [path, slicePaths] = sortPromisedPairsToPath(obj, slicePaths, currentPathNumber)
         % Function which orders the individual paths from the slicers in a
-        % form which can generate a number of continuous paths for the
-        % machine to follow.
+        % form which can generate a single continuous path for the
+        % machine to follow. Will return the remaining slice paths which
+        % could not be stiched for this single path.
         
             % Get the total number of individual paths
             numPromisePairs = height(slicePaths);
@@ -153,47 +158,52 @@ classdef FlatUniformSliceGenerator < handle
         end
         
         function [resultingPath, remainingPaths] = sortPromisedPairsToPathRecursion(obj, remainingPaths, resultingPath, currentPathNumber)
+        % The recursive method which assembles a continuous path using all the paths
+        % generated from slicing. If multiple paths exist, this function
+        % will return the remaining paths left over from each path
+        % generated until all paths are created.
             
-            % Deifne
+            % Define
             returnPath = zeros(0);
             
-            % If the remaining pairs in subset is 1, add the final line
+            % If the remaining pairs in subset is 1, there is only one more
+            % line - add and return the resultingPath
             if height(remainingPaths) == 1
                
                 % If start of final line if at end, append
                 if (abs(resultingPath(end,1) - remainingPaths(end,1)) < obj.slicerTol && abs(resultingPath(end,2) - remainingPaths(end,2)) < obj.slicerTol)
                     returnPath = [remainingPaths(1, 4:6), currentPathNumber];
-                    
-                    
+   
                 % Otherwise, return opposite end
                 else
                     returnPath = [remainingPaths(1, 1:3), currentPathNumber];
                 end
-            
+                
+                % Finally, clear the remainingPaths
                 remainingPaths(1,:) = [];
-                
-                
-            % Otherwise, sort the remainder
+
+            % Otherwise, sort the remainingPaths via recursion
             else
                 
-                % Find the next point which matches the current end of path
+                % Get the current start and end point of the path
+                % generated thus far
                 xE = resultingPath(end, 1); xS = resultingPath(1, 1);
                 yE = resultingPath(end, 2); yS = resultingPath(1, 2);
                 
+                % Iterate through all remainingPaths not yet assembled to
+                % find next path to stich to the resultingPath
                 for i = 1:height(remainingPaths)
                 
-                    % Check the start coordinates of this line                    
+                    % First, check for the start coordinates of this path (line)                    
                     x = remainingPaths(i, 1);
                     y = remainingPaths(i, 2);
                     
                     % If the end of the returnPath matches the start of
                     % this line, then append the end point of this line to
-                    % the path
-                    if (abs(xE - x) < obj.slicerTol && abs(yE - y) < obj.slicerTol) %(xE == x && yE == y)
+                    % the path and remove from remainingPaths
+                    if (abs(xE - x) < obj.slicerTol && abs(yE - y) < obj.slicerTol)
                         returnPath = [remainingPaths(i, 4:6), currentPathNumber];
                         remainingPaths(i,:) = [];
-                        %returnPath = [sortPromisedPairsToPathRecursion(obj, remainingPromisedPairs, [currentPath; returnPath]); returnPath];
-                        
                         resultingPath = [resultingPath; returnPath];
                         [resultingPath, remainingPaths] = sortPromisedPairsToPathRecursion(obj, remainingPaths, resultingPath, currentPathNumber);
                         return
@@ -201,17 +211,16 @@ classdef FlatUniformSliceGenerator < handle
                     
                     % If the start of the returnPath matches the start of
                     % this line, then flip the lines direction and append
-                    % the end to the beginning of the returnpath
-                    if (abs(xS - x) < obj.slicerTol && abs(yS - y) < obj.slicerTol) %(xS == x && yS == y)
+                    % the end to the beginning of the returnPath
+                    if (abs(xS - x) < obj.slicerTol && abs(yS - y) < obj.slicerTol)
                         returnPath = [remainingPaths(i, 4:6), currentPathNumber];
                         remainingPaths(i,:) = [];
-%                         returnPath = [returnPath; sortPromisedPairsToPathRecursion(obj, remainingPromisedPairs, [returnPath; currentPath]);];
                         resultingPath = [returnPath; resultingPath];
                         [resultingPath, remainingPaths] = sortPromisedPairsToPathRecursion(obj, remainingPaths, resultingPath, currentPathNumber);
                         return 
                     end
                     
-                    % Check the end coordinates of this line
+                    % Now, check for the end coordinates of this line
                     x = remainingPaths(i, 4);
                     y = remainingPaths(i, 5);
                     
@@ -221,7 +230,6 @@ classdef FlatUniformSliceGenerator < handle
                     if (abs(xE - x) < obj.slicerTol && abs(yE - y) < obj.slicerTol) %(xE == x && yE == y)
                         returnPath = [remainingPaths(i, 1:3), currentPathNumber];
                         remainingPaths(i,:) = [];
-                        %returnPath = [sortPromisedPairsToPathRecursion(obj, remainingPromisedPairs, [currentPath; returnPath]); returnPath];
                         resultingPath = [resultingPath; returnPath];
                         [resultingPath, remainingPaths] = sortPromisedPairsToPathRecursion(obj, remainingPaths, resultingPath, currentPathNumber);
                         return  
@@ -231,38 +239,18 @@ classdef FlatUniformSliceGenerator < handle
                     % this line, then append the start to the beginning 
                     % of the returnpath
                     if (abs(xS - x) < obj.slicerTol && abs(yS - y) < obj.slicerTol) %(xS == x && yS == y)
-                        % backup
-%                         returnPath = [remainingPromisedPairs(i, 4:6); remainingPromisedPairs(i, 1:3)];
-%                         remainingPromisedPairs(i,:) = [];
-%                         returnPath = [returnPath; sortPromisedPairsToPathRecursion(obj, remainingPromisedPairs, [currentPath; returnPath])];
-                        
                         returnPath = [remainingPaths(i, 1:3), currentPathNumber];
                         remainingPaths(i,:) = [];
-                        %returnPath = [returnPath; sortPromisedPairsToPathRecursion(obj, remainingPromisedPairs, [returnPath; currentPath])];
-                        
                         resultingPath = [returnPath; resultingPath];
                         [resultingPath, remainingPaths] = sortPromisedPairsToPathRecursion(obj, remainingPaths, resultingPath, currentPathNumber);
-                        
                         return
-                        
                     end
                     
                 end
                 
-                % If points remain that cannot be added, then a new path is
-                % needed
-                   
-                % resultingPath = [resultingPath; sortPromisedPairsToPath(obj, remainingPaths, currentPathNumber)];
-                    
-                
-                
             end
             
         end
-
-    end
-    
-    methods (Access = protected)
         
         function paths = sliceElement(obj, elementNumber, zHeight)
         % Inspect each element and all the point(s) which are sliced along
