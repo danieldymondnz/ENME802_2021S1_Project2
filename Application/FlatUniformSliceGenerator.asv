@@ -13,7 +13,7 @@ classdef FlatUniformSliceGenerator < handle
         % points which represent the coordinate of each node.
         connectivityList(:,:) double
         numOfElements int64
-        points(:,:) int64
+        points(:,:) double
         
         % The Uniform Slice Thickness for each slice - default is 0.2
         sliceThickness = 0.2;
@@ -22,7 +22,7 @@ classdef FlatUniformSliceGenerator < handle
         slicePath %(:,3) double
         
         % Accuracy of slicer
-        slicerTol = 0.0000001;
+        slicerTol = 1e-5;
         
     end
     
@@ -34,7 +34,6 @@ classdef FlatUniformSliceGenerator < handle
             obj.numOfElements = height(obj.connectivityList);
             obj.points = data.Points;
             obj.sliceThickness = preferedThickness;
-            obj.slicerTol = 0.01;
         end
         
         % Gets the X, Y, Z Coordinates of the slice path
@@ -42,8 +41,9 @@ classdef FlatUniformSliceGenerator < handle
             slicePath = obj.slicePath;
         end
         
-        % Generates and stores all slices
-        function obj = generateSlices(obj)
+        
+        function obj = generateSlicePath(obj)
+        % Generate the full slice path for all layers of this object
         
             % Get the maximum Z height
             maxZ = max(obj.points(:, 3));
@@ -53,18 +53,18 @@ classdef FlatUniformSliceGenerator < handle
             while currZ < maxZ
                 
                 % Slice at this layer and append to slice Path
-                obj.slicePath = [obj.slicePath; slice(obj, currZ)];
+                obj.slicePath = [obj.slicePath; slicePathLayer(obj, currZ)];
                 currZ = currZ + obj.sliceThickness;
                 
             end
             
             % If the end is reached, add the final layer
-            obj.slicePath = [obj.slicePath; slice(obj, maxZ)];
+            obj.slicePath = [obj.slicePath; slicePathLayer(obj, maxZ)];
                 
         end
         
         % Inspect each slice and determine elements which are cut
-        function points = slice(obj, zHeight)
+        function points = slicePathLayer(obj, zHeight)
         
             % Instantiate Objects to store Points and Paths
             slicePaths = zeros(0);
@@ -105,17 +105,21 @@ classdef FlatUniformSliceGenerator < handle
             % Remove paths which start and end at the same point
             rowsToRemove = zeros(0);
             for i=1:height(slicePaths)
-                
+               
+                if slicePaths(i,1) == slicePaths(i,4) && slicePaths(i,2) == slicePaths(i,5) && slicePaths(i,3) == slicePaths(i,6)
+                    rowsToRemove = [rowsToRemove; i];
+                end
+
             end
-            [~,a,b] = setxor(slicePaths(:,4:6), slicePaths(:,1:3));
+            slicePaths(rowsToRemove,:) = [];
             
             % Remove Duplicate Paths or Paths which start and end at same
             % point on plane.
             % Remove Flipped Paths
-            promisedPairsFlipped = [slicePaths(:,4:6), slicePaths(:,1:3)];
-            [~,a,b] = intersect(slicePaths,promisedPairsFlipped,'rows');
-            removed = setxor(b,a);
-            slicePaths(removed',:) = [];
+% %             promisedPairsFlipped = [slicePaths(:,4:6), slicePaths(:,1:3)];
+% %             [~,a,b] = intersect(slicePaths,promisedPairsFlipped,'rows');
+% %             removed = setxor(b,a);
+% %             slicePaths(removed',:) = [];
             
             % For each
             
@@ -133,19 +137,21 @@ classdef FlatUniformSliceGenerator < handle
             
         end
         
-        % RECUSRSION TO CLEAN
         function [path, slicePaths] = sortPromisedPairsToPath(obj, slicePaths, currentPathNumber)
+        % Function which orders the individual paths from the slicers in a
+        % form which can generate a number of continuous paths for the
+        % machine to follow.
         
-            % Get the total number of Slice Paths on plane
+            % Get the total number of individual paths
             numPromisePairs = height(slicePaths);
             
-            % If there are none, return none
+            % If there are none, return the empty slice paths as-is
             if numPromisePairs == 0
                 return
             
             % If there is only one pair, then return the single pair
             elseif numPromisePairs == 1
-                path = [slicePaths(1, 1:3); slicePaths(1, 4:6)];
+                path = [slicePaths(1, 1:3); slicePaths(1, 4:6), currentPathNumber];
                 return
             end
 
@@ -154,8 +160,9 @@ classdef FlatUniformSliceGenerator < handle
             
             % Sort the remainder
             [resultingPath, slicePaths] = sortPromisedPairsToPathRecursion(obj, slicePaths, path, currentPathNumber);
-            path = [resultingPath];
+            path = resultingPath;
             path = [path; path(1,:)];
+            
         end
         
         function [resultingPath, remainingPaths] = sortPromisedPairsToPathRecursion(obj, remainingPaths, resultingPath, currentPathNumber)
@@ -269,73 +276,16 @@ classdef FlatUniformSliceGenerator < handle
         
         
         
-        % Inspect each element and get a promised pair (path between two
-        % nodes along the profile of the element
-        function paths = sliceElement(obj, elementNumber, zHeight)
-            
-            % Initalise the matrices
-            paths = zeros(0);
-            intersectingPoints = zeros(0);
-            
-            % Parse the data for this element
-            elementVertices = getElementData(obj, elementNumber);
-            numOfVertices = height(elementVertices);
-            
-            % For each edge of the element, check to see if edge has
-            % intersect or not.
-            for edge = 1: numOfVertices
-                
-                pN1 = edge;
-                pN2 = edge + 1;
-                
-                if pN2 > numOfVertices
-                    pN2 = 1;
-                end
-                
-                point1 = elementVertices(pN1, :);
-                point2 = elementVertices(pN2, :);
-                slicedPoints = getSlicePoint(obj, point1, point2, zHeight);
-                
-                % If two points are returned, this edge lies on the plane.
-                % Append to lines
-                if height(slicedPoints) == 2
-                    paths = [paths; slicedPoints(1,:), slicedPoints(2,:)];
-                    
-                % If only a single point is returned, hold this item -
-                % either this is a triangle with two intercepting edges or
-                % 1 vertice touching the plane
-                elseif height(slicedPoints) == 1
-                    intersectingPoints = [intersectingPoints; slicedPoints(1,:)];
-                end
-                % Otherwise, nothing is found on this edge - proceed to
-                % next
-                                    
-            end
-            
-            % With all edges checked, now review the geometry of this
-            % element
-            
-            % If all edges are touching the plane, than this geometry is
-            % not relevant to the overall path - return nothing
-            if height(paths) == 3
-                paths = zeros(0);
-            
-            % If there are two intersectingPoints, the line between these
-            % points will generate a path for this layer
-            elseif height(intersectingPoints) == 2 
-                paths = [intersectingPoints(1,:), intersectingPoints(2,:)];
-            
-            % If there is only one intersectingPoint stored, this is the
-            % only touching element on this plane - return for analysis
-            elseif height(intersectingPoints) == 1
-                paths = [intersectingPoints, interestingPoints];
-            end
-            
-            % Otherwise, there is just a single path touching the plane -
-            % return existing values
-            paths;
-                 
-        end
+        
+        
+        
+        
+
+    end
+    
+    methods (Access = protected)
+        
+        
         
         function intersectingVertices = getSlicePoint(obj, point1, point2, currZ)
         % Inspect a line between two vetrices and evaluate if a point exists
@@ -365,18 +315,20 @@ classdef FlatUniformSliceGenerator < handle
                     Z = currZ;
                     intersectingVertices = [X, Y, Z];
                 end
-
+                
             end
-  
         end
-
-        % Obtain the X,Y,Z Coordinate for each node of an element object
+        
         function elementData = getElementData(obj, elementNumber)
+        % Obtain the X,Y,Z Coordinate for each node of an element on the
+        % object
         
             % Lookup Element in Connectivity List and obtain node numbers
             if (elementNumber > obj.numOfElements || elementNumber < 1)
                 throw Exception("Invalid Element Number");
             end
+            
+            % Get the number of nodes for this element
             nodes = obj.connectivityList(elementNumber,:);
             
             % Compound the nodes into a nxn matrix and return
@@ -388,13 +340,7 @@ classdef FlatUniformSliceGenerator < handle
             
         end
         
-        function outputArg = method1(obj,inputArg)
-            %METHOD1 Summary of this method goes here
-            %   Detailed explanation goes here
-            outputArg = obj.Property1 + inputArg;
-        end
     end
-    
     
 end
 
