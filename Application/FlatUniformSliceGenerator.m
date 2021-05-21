@@ -22,7 +22,7 @@ classdef FlatUniformSliceGenerator < handle
         slicePath %(:,3) double
         
         % Accuracy of slicer
-        slicerTol = 1e-12;
+        slicerTol = 1e-5;
         
     end
     
@@ -308,7 +308,13 @@ classdef FlatUniformSliceGenerator < handle
                 % either this is a triangle with two intercepting edges or
                 % 1 vertice touching the plane
                 elseif height(slicedPoints) == 1
-                    intersectingPoints = [intersectingPoints; slicedPoints(1,:)];
+                    
+                    % If the item already exists, however, ignore (when
+                    % slicing through point
+                    if (height(intersectingPoints) == 0 || ~(ismember(slicedPoints(1,:), intersectingPoints, 'rows')))
+                        intersectingPoints = [intersectingPoints; slicedPoints(1,:)];
+                    end
+                    
                 end
                 % Otherwise, nothing is found on this edge - proceed to
                 % next
@@ -331,7 +337,7 @@ classdef FlatUniformSliceGenerator < handle
             % If there is only one intersectingPoint stored, this is the
             % only touching element on this plane - return for analysis
             elseif height(intersectingPoints) == 1
-                paths = [intersectingPoints, interestingPoints];
+                paths = [intersectingPoints, intersectingPoints];
             end
             
             % Otherwise, there is just a single path touching the plane -
