@@ -13,7 +13,7 @@ classdef FlatUniformSliceGenerator < handle
         % points which represent the coordinate of each node.
         connectivityList(:,:) double
         numOfElements int64
-        points(:,:) int64
+        points(:,:) double
         
         % The Uniform Slice Thickness for each slice - default is 0.2
         sliceThickness = 0.2;
@@ -22,7 +22,7 @@ classdef FlatUniformSliceGenerator < handle
         slicePath %(:,3) double
         
         % Accuracy of slicer
-        slicerTol = 0.0000001;
+        slicerTol = 1e-12;
         
     end
     
