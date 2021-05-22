@@ -181,7 +181,7 @@ classdef FlatUniformSliceGenerator < handle
                 
                 % Finally, clear the remainingPaths
                 remainingPaths(1,:) = [];
-
+            
             % Otherwise, sort the remainingPaths via recursion
             else
                 
@@ -189,6 +189,12 @@ classdef FlatUniformSliceGenerator < handle
                 % generated thus far
                 xE = resultingPath(end, 1); xS = resultingPath(1, 1);
                 yE = resultingPath(end, 2); yS = resultingPath(1, 2);
+                
+                % If the start and end of the path is the same, then return
+                % this path - it is completed
+                if (height(resultingPath) > 1) && (xE == xS) && (yE == yS)
+                    return
+                end
                 
                 % Iterate through all remainingPaths not yet assembled to
                 % find next path to stich to the resultingPath
