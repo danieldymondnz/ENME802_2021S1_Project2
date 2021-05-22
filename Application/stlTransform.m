@@ -31,7 +31,7 @@ function transformedSTL = stlTransform(stlToTransform, thetaX, thetaY, thetaZ, a
     % Auto-place coordinates if requested
     if (autoPlace)
         stlPoints = autoPlaceCoordinates(stlPoints);
-    elseif (dX ~= 0 || dy ~= 0 || dz ~= 0)
+    elseif (dX ~= 0 || dY ~= 0 || dZ ~= 0)
         stlPoints = translateCoordinates(stlPoints, dX, dY, dZ);
     end
     
