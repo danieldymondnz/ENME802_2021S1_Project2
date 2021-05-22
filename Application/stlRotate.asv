@@ -1,8 +1,89 @@
-function stl = stlRotate(stl)
-X = stl.Points(:,1);
-Y = stl.Points(:,2);
-Z = stl.Points(:,3);
+function rotatedCoordinates = stlRotate(coordinatesToRotate, thetaX, thetaY, thetaZ)
 
-obj 
-stl.Points = [Z,X,Y];
+    % Credit: Code derrived from Khan Academy
+    % https://www.khanacademy.org/computing/computer-programming/programming-games-visualizations/programming-3d-shapes/a/rotating-3d-shapes
+
+    % Convert angles in Degrees into Radians
+    const = 2 * pi / 360;
+    thetaX = thetaX * const;
+    thetaY = thetaY * const;
+    thetaZ = thetaZ * const;
+    
+    % Rotate object on X axis
+    
+
+X = coordinatesToRotate.Points(:,1);
+Y = coordinatesToRotate.Points(:,2);
+Z = coordinatesToRotate.Points(:,3);
+
+ 
+stlRotated.Points = [Z,X,Y];
+stlRotated.ConnectivityList = coordinatesToRotate.ConnectivityList;
+
+    
+
 end
+
+function rotatedCoordinates = rotateX(coordinatesToRotate, thetaX)
+
+    sinTheta = sin(thetaX);
+    cosTheta = cos(thetaX);
+    
+    for point = 1:height(coordinatesToRotate)
+        
+        % Extract Points
+        currY = coordinatesToRotate(point, 2);
+        currZ = coordinatesToRotate(point, 3);
+        
+        % Modify Y
+        coordinatesToRotate(point, 2) = currY * cosTheta - currZ * sinTheta;
+        
+        % Modify Z
+        coordinatesToRotate(point, 3) = currZ * cosTheta + currY * sinTheta;
+        
+    end
+    
+end
+
+function rotatedCoordinates = rotateY(coordinatesToRotate, thetaY)
+
+    sinTheta = sin(thetaY);
+    cosTheta = cos(thetaY);
+    
+    for point = 1:height(coordinatesToRotate)
+        
+        % Extract Points
+        currX = coordinatesToRotate(point, 1);
+        currZ = coordinatesToRotate(point, 3);
+        
+        % Modify X
+        coordinatesToRotate(point, 1) = currX * cosTheta + currZ * sinTheta;
+        
+        % Modify Z
+        coordinatesToRotate(point, 3) = currZ * cosTheta - currX * sinTheta;
+        
+    end
+    
+end
+
+function rotatedCoordinates = rotateZ(coordinatesToRotate, thetaZ)
+
+    sinTheta = sin(thetaZ);
+    cosTheta = cos(thetaZ);
+    
+    for point = 1:height(coordinatesToRotate)
+        
+        % Extract Points
+        currX = coordinatesToRotate(point, 1);
+        currY = coordinatesToRotate(point, 2);
+        
+        % Modify X
+        coordinatesToRotate(point, 1) = currX * cosTheta - currY * sinTheta;
+        
+        % Modify Y
+        coordinatesToRotate(point, 2) = currY * cosTheta + currX * sinTheta;
+        
+    end
+    
+end
+    
