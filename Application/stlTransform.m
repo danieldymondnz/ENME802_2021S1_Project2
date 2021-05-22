@@ -1,8 +1,12 @@
-function rotatedCoordinates = stlRotate(coordinatesToRotate, thetaX, thetaY, thetaZ)
+function transformedSTL = stlTransform(stlToTransform, thetaX, thetaY, thetaZ)
 
     % Credit: Code derrived from Khan Academy
     % https://www.khanacademy.org/computing/computer-programming/programming-games-visualizations/programming-3d-shapes/a/rotating-3d-shapes
 
+    % Copy information from the STL
+    stlPoints = stlToTransform.Points;
+    stlConList = stlToTransform.ConnectivityList;
+    
     % Convert angles in Degrees into Radians
     const = 2 * pi / 360;
     thetaX = thetaX * const;
@@ -10,21 +14,34 @@ function rotatedCoordinates = stlRotate(coordinatesToRotate, thetaX, thetaY, the
     thetaZ = thetaZ * const;
     
     % Rotate object on X axis
+    if thetaX ~= 0
+        stlPoints = rotateX(stlPoints, thetaX);
+    end
+       
+    % Rotate object on Y axis
+    if thetaY ~= 0
+        stlPoints = rotateY(stlPoints, thetaY);
+    end
     
-
-X = coordinatesToRotate.Points(:,1);
-Y = coordinatesToRotate.Points(:,2);
-Z = coordinatesToRotate.Points(:,3);
-
- 
-stlRotated.Points = [Z,X,Y];
-stlRotated.ConnectivityList = coordinatesToRotate.ConnectivityList;
-
+    % Rotate object on Z axis
+    if thetaZ ~= 0
+        stlPoints = rotateZ(stlPoints, thetaZ);
+    end
     
+    % Check X,Y,Z Coordinates and fix model such that it sits on the plane
+    for i = 1:3
+        minOnAxis = min(stlPoints(:,i));
+        if minOnAxis ~= 0
+            stlPoints(:,i) = stlPoints(:,i) - minOnAxis;
+        end
+    end
+    
+    % Create new triangulation object to return 
+    transformedSTL = triangulation(stlConList, stlPoints);
 
 end
 
-function rotatedCoordinates = rotateX(coordinatesToRotate, thetaX)
+function coordinatesToRotate = rotateX(coordinatesToRotate, thetaX)
 
     sinTheta = sin(thetaX);
     cosTheta = cos(thetaX);
@@ -45,7 +62,7 @@ function rotatedCoordinates = rotateX(coordinatesToRotate, thetaX)
     
 end
 
-function rotatedCoordinates = rotateY(coordinatesToRotate, thetaY)
+function coordinatesToRotate = rotateY(coordinatesToRotate, thetaY)
 
     sinTheta = sin(thetaY);
     cosTheta = cos(thetaY);
@@ -66,7 +83,7 @@ function rotatedCoordinates = rotateY(coordinatesToRotate, thetaY)
     
 end
 
-function rotatedCoordinates = rotateZ(coordinatesToRotate, thetaZ)
+function coordinatesToRotate = rotateZ(coordinatesToRotate, thetaZ)
 
     sinTheta = sin(thetaZ);
     cosTheta = cos(thetaZ);
