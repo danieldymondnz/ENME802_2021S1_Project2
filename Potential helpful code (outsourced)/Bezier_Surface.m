@@ -1,12 +1,9 @@
 clear all 
 
-B = [0 10 20 0;         %Position verxtor of each point (x,y)
-    10 120 60 10;
-    10 90 110 10; 
-    0 40 30 0];
+B = rand([20 10]);
 
 n = height(B);      %For U matrix
-m = length(B);      %For W matrix *note that these do not need to be equal in reality 
+m = width(B);      %For W matrix *note that these do not need to be equal in reality 
 
 via = 20;           %Divisions
 
