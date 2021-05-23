@@ -107,25 +107,41 @@ classdef FlatUniformSliceGenerator < handle
     
     methods (Access = protected)
         
-        function obj = generateSlicePath(obj)
-        % Generate the full slice path for all layers of this object
+        function sliceHeights = generateSliceHeights(obj)
+        % Generates the Z values for which each of the flat layer slices
+        % will be generated at.
         
             % Get the maximum Z height
             maxZ = max(obj.points(:, 3));
+            
+            % Generate a list of all the slice heights
+            sliceHeights = zeros(0);
             currZ = 0;
             
-            % Slice at each layer height
             while currZ < maxZ
-                
-                % Slice at this layer and append to slice Path
-                obj.slicePath = [obj.slicePath; slicePathLayer(obj, currZ)];
+               
+                sliceHeights = [sliceHeights; currZ];
                 currZ = currZ + obj.sliceThickness;
                 
             end
             
-            % If the end is reached, add the final layer
-            obj.slicePath = [obj.slicePath; slicePathLayer(obj, maxZ)];
-                
+            % Add the top layer
+            sliceHeights = [sliceHeights; maxZ];
+            
+        end
+        
+        function obj = generateSlicePath(obj)
+        % Generate the full slice path for all layers of this object
+            
+            % Generate the slice heights
+            sliceHeights = obj.generateSliceHeights();
+            
+            % Iterate and generate the slices paths for each layer
+            for zHeightIndex = 1:height(sliceHeights)
+                currZ = sliceHeights(zHeightIndex);
+                obj.slicePath = [obj.slicePath; slicePathLayer(obj, currZ)];
+            end
+        
         end
         
         function [path, slicePaths] = sortPromisedPairsToPath(obj, slicePaths, currentPathNumber)
