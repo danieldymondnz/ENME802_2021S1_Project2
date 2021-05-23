@@ -1,4 +1,4 @@
-function transformedSTL = stlTransform(stlToTransform, thetaX, thetaY, thetaZ, autoPlace, dX, dY, dZ)
+function transformedSTL = stlTransform(stlToTransform, thetaX, thetaY, thetaZ, autoPlace, dX, dY, dZ, scale)
 
     % Credit: Rotation Code derrived from Khan Academy
     % https://www.khanacademy.org/computing/computer-programming/programming-games-visualizations/programming-3d-shapes/a/rotating-3d-shapes
@@ -33,6 +33,11 @@ function transformedSTL = stlTransform(stlToTransform, thetaX, thetaY, thetaZ, a
         stlPoints = autoPlaceCoordinates(stlPoints);
     elseif (dX ~= 0 || dY ~= 0 || dZ ~= 0)
         stlPoints = translateCoordinates(stlPoints, dX, dY, dZ);
+    end
+    
+    % Scale the object
+    if (scale ~= 100)
+        stlPoints(:,:) = stlPoints(:,:) * (scale / 100);
     end
     
     % Create new triangulation object to return 
