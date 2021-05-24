@@ -33,7 +33,14 @@ classdef FlatAdaptiveSliceGenerator < FlatUniformSliceGenerator
             
             while currZ < maxZ
                
+                % Checks for greatest angle on this layer
+                
+                
+                % Append the current Z
                 sliceHeights = [sliceHeights; currZ];
+                
+                
+                % Increment
                 currZ = currZ + obj.sliceThickness;
                 
             end
@@ -42,6 +49,8 @@ classdef FlatAdaptiveSliceGenerator < FlatUniformSliceGenerator
             sliceHeights = [sliceHeights; maxZ];
             
         end
+        
+        
         
     end
 end
