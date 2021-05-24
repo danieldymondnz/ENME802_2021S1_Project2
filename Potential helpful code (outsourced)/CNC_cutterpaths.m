@@ -28,26 +28,32 @@ Bx = [0 15 30 45 60;
       resr = input('Enter Number of Cutter paths:')
       
       % Main routine (calculate points for each coordinate)
-      for i = 1:res+1;
-          for j=1:res+1;
+      for i = 1:res+1
+          for j=1:res+1
               U = [((i-1)/res)^4 ((i-1)/res)^3 ((i-1)/res)^2 ((i-1)/res) 1];
-              W = [((j-1)/res)^4 ((j-1)/res)^3 ((j-1)/res)^2 ((j-1)/res) 1];
+              W = [((j-1)/res)^4; ((j-1)/res)^3; ((j-1)/res)^2; ((j-1)/res); 1];
               % Coordinates of sirface points 
-              Px(i,j) = U*N*Bx*NT*W';
-              Py(i,j) = U*N*By*NT*W';
-              Pz(i,j) = U*N*Bz*NT*W';
+              Px(i,j) = U*N*Bx*NT*W;
+              Py(i,j) = U*N*By*NT*W;
+              Pz(i,j) = U*N*Bz*NT*W;
           end 
       end
       
       % Display sirface and control points on screen 
       
-      figure
+figure(1)
       
       mesh(Px,Py,Pz);
-      %shading interp;
+      shading interp;
       title('Bezier Surface');
       grid on
       xlabel('X-axis');ylabel('Y-axis');zlabel('Z-axis');
       
       cutterpath(N,NT,Bx,By,Bz,resc,resr)
-     
+      
+figure(2) 
+plot3(Px, Py, Pz)
+hold on 
+grid on
+title('CNC Cutter paths');
+xlabel('X-Axis'); ylabel('Y-Axis'); zlabel('Z-Axis')
