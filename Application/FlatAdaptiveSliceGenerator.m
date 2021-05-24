@@ -43,7 +43,7 @@ classdef FlatAdaptiveSliceGenerator < FlatUniformSliceGenerator
             
             while currZ < maxZ
                
-                % Minimum Angle Predefined to 90 degress or pi/2 rads
+                % Minimum Angle Predefined to 90 degrees
                 minAngle = pi / 2;
                 
                 % Checks for lowest angle on this layer within the range
@@ -60,13 +60,13 @@ classdef FlatAdaptiveSliceGenerator < FlatUniformSliceGenerator
                 
                 % Compare minAngle against available Layer Thicknesses
                 deltaZ = maxThickness;
+                minAngle = minAngle * 180 / pi;
                 
                 for i = 1:height(obj.layerProfiles)
                    
                     % If this angle is within the range, then set this as
                     % the delta Z
-                    
-                    if obj.layerProfiles(i,1) <= minAngle && minAngle < obj.layerProfiles(i,1)
+                    if obj.layerProfiles(i,1) <= minAngle && minAngle < obj.layerProfiles(i,2)
                        deltaZ = obj.layerProfiles(i,3);
                        break
                     end
@@ -74,7 +74,7 @@ classdef FlatAdaptiveSliceGenerator < FlatUniformSliceGenerator
                 end
                 
                 % Append the current Z
-                sliceHeights = [sliceHeights; deltaZ];
+                sliceHeights = [sliceHeights; currZ];
                 
                 % Increment
                 currZ = currZ + deltaZ;
@@ -97,12 +97,29 @@ classdef FlatAdaptiveSliceGenerator < FlatUniformSliceGenerator
             numOfVertices = height(elementVertices);
             
             % If any part of the element lies on the plane, process
-            isOnPlane = 1;
+            isOnPlane = 0;
             for vertice = 1:numOfVertices
                 
-                currZ = elementVertices(vertice,3);
-                if (minZ <= currZ && currZ <= maxZ)
+                n1 = vertice;
+                n2 = vertice + 1;
+                
+                if (vertice >= numOfVertices)
+                    n2 = 1;
+                end
+                    
+                z1 = elementVertices(n1,3);
+                z2 = elementVertices(n2,3);
+                
+                if ((z1 <= minZ && minZ <= z2) || (minZ <= z1 && z2 <= minZ))
+                    
                     isOnPlane = 1;
+                    continue;
+                    
+                elseif ((z1 <= maxZ && maxZ <= z2) || (maxZ <= z1 && z2 <= maxZ))
+                    
+                    isOnPlane = 1;
+                    continue;
+                    
                 end
                 
             end
@@ -120,13 +137,14 @@ classdef FlatAdaptiveSliceGenerator < FlatUniformSliceGenerator
             
             % Generate the normal vector
             N = cross(U, V);
+            N = N/norm(N);
             
             % Analyse the Z Vector
             angleXZ = abs(atan(N(3)/N(1)));
             angleYZ = abs(atan(N(3)/N(2)));
             
             % Return the min angle
-            angle = min(angleXZ, angleYZ);
+            angle = (pi/2) - min(angleXZ, angleYZ);
             
         end
         
