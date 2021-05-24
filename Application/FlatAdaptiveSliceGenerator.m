@@ -153,16 +153,27 @@ classdef FlatAdaptiveSliceGenerator < FlatUniformSliceGenerator
                 for element = 1:obj.numOfElements
                     
                     % Get element information
-                    [angleToXYPlane, minZ, maxZ] = obj.adaptiveSlicerElementInformation(element,:);
+                    information = obj.adaptiveSlicerElementInformation(element,1:3);
+                    angleToXYPlane = information(1,1);
+                    minEleZ = information(1,2);
+                    maxEleZ = information(1,3);
                     
-                    % Set the new minAngle
-                    minAngle = min(minAngle, angleToXYPlane);
+                    % If element lies in the plane area
+                    if (minEleZ <= currZ && currZ + maxThickness <= maxEleZ)
+                        
+                       % Set the new minAngle
+                        minAngle = min(minAngle, angleToXYPlane);
+
+                        % Set the new minResidualHeight
+                        elementResidHeight = maxThickness;
+                        if (currZ < maxEleZ && maxEleZ < currZ + maxThickness)
+                            elementResidHeight = maxEleZ - currZ;
+                        end   
+                        minResidualHeight = min(minResidualHeight,elementResidHeight);
+                        
+                    end
+
                     
-                    % Set the new minResidualHeight
-                    if (currZ < maxZ && maxZ < currZ + maxThickness)
-                        deltaZ = maxZ - currZ;
-                    end   
-                    minResidualHeight = min(minResidualHeight,deltaZ);
                      
                 end
                 
@@ -213,7 +224,7 @@ classdef FlatAdaptiveSliceGenerator < FlatUniformSliceGenerator
             dotProduct = dot(N,Z);
 
             % Find the angle between the two vectors
-            angleToZ = 90 - acosd(dotProduct / (norm(N) * norm(Z)));
+            angleToZ = abs(acosd(dotProduct / (norm(N) * norm(Z))));
 
         end
     end
