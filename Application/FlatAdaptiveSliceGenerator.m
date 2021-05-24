@@ -11,6 +11,10 @@ classdef FlatAdaptiveSliceGenerator < FlatUniformSliceGenerator
                             79, 85, 0.5;
                             85, 90, 1.0];
         
+        % Stores the important information about each element
+        % [angleToXYPlane, minZ, maxZ]
+        adaptiveSlicerElementInformation (:,3) double 
+        
     end
     
     methods (Access = public)
@@ -18,6 +22,102 @@ classdef FlatAdaptiveSliceGenerator < FlatUniformSliceGenerator
         % Create an instance using Triangulation Data
         function obj = FlatAdaptiveSliceGenerator(data, preferedThickness)
             obj = obj@FlatUniformSliceGenerator(data, preferedThickness);
+        end
+        
+        % Determines the angle of the element
+%         function [isOnPlane, angle, residualHeight] = checkElement(obj, elementNumber, currZ, minZ, maxZ)
+%         % Determines the residual height of the element relative to the
+%         % current slice and the element's angle relative to the x-y plane
+%             
+%             % Initalise values
+%             isOnPlane = 0;
+%             angle = 0;
+%             residualHeight = 0;
+%             
+%             % Parse the data for this element
+%             elementVertices = getElementData(obj, elementNumber);
+%             numOfVertices = height(elementVertices);
+%             
+%             % If any part of the element lies on the plane, process
+%             for vertice = 1:numOfVertices
+%                 
+%                 n1 = vertice;
+%                 n2 = vertice + 1;
+%                 
+%                 if (vertice >= numOfVertices)
+%                     n2 = 1;
+%                 end
+%                     
+%                 z1 = elementVertices(n1,3);
+%                 z2 = elementVertices(n2,3);
+%                 
+%                 if ((z1 <= minZ && minZ <= z2) || (minZ <= z1 && z2 <= minZ))
+%                     
+%                     isOnPlane = 1;
+%                     continue;
+%                     
+%                 elseif ((z1 <= maxZ && maxZ <= z2) || (maxZ <= z1 && z2 <= maxZ))
+%                     
+%                     isOnPlane = 1;
+%                     continue;
+%                     
+%                 end
+%                 
+%             end
+%             
+%             % If this element doesn't lie on the plane, return nothing
+%             if isOnPlane == 0
+%                 return
+%             end
+%             
+%             % Otherwise, process element
+%             
+%             % Generate the Vectors for two edge U, V on the triangle
+%             U = elementVertices(2,:) - elementVertices(1,:);
+%             V = elementVertices(3,:) - elementVertices(1,:);
+%             
+%             % Generate the normal vector
+%             N = cross(U, V);
+%             N = N/norm(N);
+%             
+%             % Analyse the Z Vector
+%             angleXZ = abs(atan(N(3)/N(1)));
+%             angleYZ = abs(atan(N(3)/N(2)));
+%             
+%             % Return the min angle
+%             angle = (pi/2) - min(angleXZ, angleYZ);
+%             
+%         end
+        
+        % Generates and stores the information for the
+        % adaptiveSlicerElementInformation matrix.
+        function generateAdaptiveSlicerElementInformation(obj)
+           
+            % Initalise the matrix
+            obj.adaptiveSlicerElementInformation =[];
+            
+            % For each element, generate the necessary information
+            for element = 1:obj.numOfElements
+                
+                % Get the element information
+                elementVertices = getElementData(obj, element);
+                    
+                % Calculate the normal angle of this element to the XY
+                % Plane
+                angleToZ = obj.determineAngleToZ(elementVertices);
+                
+                % Determine the minimum Z Value
+                minEleZ = min(elementVertices(:,3));
+                
+                % Determine the maximum Z Value
+                maxEleZ = max(elementVertices(:,3));
+                
+                % Write to the matrix
+                obj.adaptiveSlicerElementInformation = ...
+                    [obj.adaptiveSlicerElementInformation; angleToZ, minEleZ, maxEleZ];
+                
+            end
+            
         end
         
     end
@@ -30,37 +130,44 @@ classdef FlatAdaptiveSliceGenerator < FlatUniformSliceGenerator
         % Generates the Z values for which each of the flat layer slices
         % will be generated at.
         
+            % Generate Element Information
+            generateAdaptiveSlicerElementInformation(obj);
+        
             % Get the maximum Z height
             maxZ = max(obj.points(:, 3));
             
             % Generate a list of all the slice heights
-            sliceHeights = zeros(0);
+            sliceHeights = [];
             currZ = 0;
             
             % The maximum height to check is within the range of the
             % maximum layer thickness
             maxThickness = max(obj.layerProfiles(:,3));
-            
             while currZ < maxZ
                
                 % Minimum Angle Predefined to 90 degrees
-                minAngle = pi / 2;
+                minAngle = 90;
+                minResidualHeight = maxThickness;
                 
                 % Checks for lowest angle on this layer within the range
                 for element = 1:obj.numOfElements
                     
-                    % Calculate Minimum Angle on Plane
-                    [isOnPlane, angle] = obj.checkElement(element, currZ, currZ + maxThickness);
+                    % Get element information
+                    [angleToXYPlane, minZ, maxZ] = obj.adaptiveSlicerElementInformation(element,:);
                     
-                    if isOnPlane == 1
-                        minAngle = min(minAngle, angle);
-                    end
+                    % Set the new minAngle
+                    minAngle = min(minAngle, angleToXYPlane);
+                    
+                    % Set the new minResidualHeight
+                    if (currZ < maxZ && maxZ < currZ + maxThickness)
+                        deltaZ = maxZ - currZ;
+                    end   
+                    minResidualHeight = min(minResidualHeight,deltaZ);
                      
                 end
                 
                 % Compare minAngle against available Layer Thicknesses
                 deltaZ = maxThickness;
-                minAngle = minAngle * 180 / pi;
                 
                 for i = 1:height(obj.layerProfiles)
                    
@@ -85,69 +192,30 @@ classdef FlatAdaptiveSliceGenerator < FlatUniformSliceGenerator
             sliceHeights = [sliceHeights; maxZ];
             
         end
-        
-        % Determines the angle of the element
-        function [isOnPlane, angle] = checkElement(obj, elementNumber, minZ, maxZ)
-            
-            % Initalise the matrices
-            angle = -1;
-            
-            % Parse the data for this element
-            elementVertices = getElementData(obj, elementNumber);
-            numOfVertices = height(elementVertices);
-            
-            % If any part of the element lies on the plane, process
-            isOnPlane = 0;
-            for vertice = 1:numOfVertices
-                
-                n1 = vertice;
-                n2 = vertice + 1;
-                
-                if (vertice >= numOfVertices)
-                    n2 = 1;
-                end
-                    
-                z1 = elementVertices(n1,3);
-                z2 = elementVertices(n2,3);
-                
-                if ((z1 <= minZ && minZ <= z2) || (minZ <= z1 && z2 <= minZ))
-                    
-                    isOnPlane = 1;
-                    continue;
-                    
-                elseif ((z1 <= maxZ && maxZ <= z2) || (maxZ <= z1 && z2 <= maxZ))
-                    
-                    isOnPlane = 1;
-                    continue;
-                    
-                end
-                
-            end
-            
-            % If this element doesn't lie on the plane, return nothing
-            if isOnPlane == 0
-                return
-            end
-            
-            % Otherwise, process element
-            
-            % Generate the Vectors for two edge U, V on the triangle
+           
+        function angleToZ = determineAngleToZ(obj, elementVertices)
+           
+            % Generate two vectors
             U = elementVertices(2,:) - elementVertices(1,:);
             V = elementVertices(3,:) - elementVertices(1,:);
-            
-            % Generate the normal vector
-            N = cross(U, V);
+
+            % Find the Cross Product
+            N = cross(U,V);
             N = N/norm(N);
-            
-            % Analyse the Z Vector
-            angleXZ = abs(atan(N(3)/N(1)));
-            angleYZ = abs(atan(N(3)/N(2)));
-            
-            % Return the min angle
-            angle = (pi/2) - min(angleXZ, angleYZ);
-            
+
+            % If vector is pointing down, flip to point up
+            if N(1,3) < 0
+                N(1,:) = N(1,:) * -1;
+            end
+
+            % Find the Dot Product to a unit vector for Z
+            Z = [0 0 1];
+            dotProduct = dot(N,Z);
+
+            % Find the angle between the two vectors
+            angleToZ = 90 - acosd(dotProduct / (norm(N) * norm(Z)));
+
         end
-        
     end
 end
 
