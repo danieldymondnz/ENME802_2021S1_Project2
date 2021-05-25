@@ -30,12 +30,15 @@ for i = 1:nfaces
     
     points(i*3-2,:) = point1; % coordinates of point 1
     points(i*3-1,:) = point2; % %coordinates of point 2
-    points(i,:) = point3; % %coordinates of point 3
+    points(i*3,:) = point3; % %coordinates of point 3
     
     connectivityList(i,:) = [3*i-2 3*i-1 3*i]; % connectivity list pattern
     fread(fid,1,'int16'); % skip to Attribute byte count 
 end
 
-obj = triangulation(connectivityList,points);
+% obj = triangulation(connectivityList,points);
 fclose(fid);
+obj = triangulation(connectivityList,points);
+
+end
 
