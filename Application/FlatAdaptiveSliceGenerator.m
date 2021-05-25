@@ -6,10 +6,10 @@ classdef FlatAdaptiveSliceGenerator < FlatUniformSliceGenerator
               
         % Default layer profiles as provided in the Example
         % [minAngle, maxAngle, layerThickness]
-        layerProfiles = [0, 65, 0.1;
-                            65, 79, 0.2;
-                            79, 85, 0.5;
-                            85, 90, 1.0];
+        layerProfiles = [0, 65, 0, 0.2, 0.1;
+                            65, 79, 0.2, 0.5, 0.2;
+                            79, 85, 0.5, 1.0, 0.5;
+                            85, 90, 1.5, 1e12, 1.0];
         
         % Stores the important information about each element
         % [angleToXYPlane, minZ, maxZ]
@@ -142,7 +142,7 @@ classdef FlatAdaptiveSliceGenerator < FlatUniformSliceGenerator
             
             % The maximum height to check is within the range of the
             % maximum layer thickness
-            maxThickness = max(obj.layerProfiles(:,3));
+            maxThickness = max(obj.layerProfiles(:,5));
             while currZ < maxZ
                
                 % Minimum Angle Predefined to 90 degrees
@@ -179,13 +179,24 @@ classdef FlatAdaptiveSliceGenerator < FlatUniformSliceGenerator
                 
                 % Compare minAngle against available Layer Thicknesses
                 deltaZ = maxThickness;
-                
                 for i = 1:height(obj.layerProfiles)
                    
                     % If this angle is within the range, then set this as
                     % the delta Z
                     if obj.layerProfiles(i,1) <= minAngle && minAngle < obj.layerProfiles(i,2)
-                       deltaZ = obj.layerProfiles(i,3);
+                       deltaZ = obj.layerProfiles(i,5);
+                       break
+                    end
+                    
+                end
+                
+                % Compare residualHeight against available Layer Thicknesses
+                for i = 1:height(obj.layerProfiles)
+                   
+                    % If this angle is within the range, compare and set to
+                    % deltaZ
+                    if obj.layerProfiles(i,3) <= minResidualHeight && minResidualHeight < obj.layerProfiles(i,4)
+                       deltaZ = min(deltaZ, obj.layerProfiles(i,5));
                        break
                     end
                     
