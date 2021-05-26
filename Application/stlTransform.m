@@ -148,7 +148,7 @@ function coordinatesToRotate = rotateZ(coordinatesToRotate, thetaZ)
     
     % If the coordinate is a square angle (+/- 90, 180, 270), then just
     % invert rows and columns of matrix
-    if mod(thetaY,90) == 0
+    if mod(thetaZ,90) == 0
         
         direct = thetaZ/abs(thetaX);
         numOfNinetyDegRotations = thetaZ / 90;
