@@ -95,7 +95,7 @@ classdef FlatAdaptiveSliceGenerator < FlatUniformSliceGenerator
                     maxEleZ = information(1,3);
                     
                     % If element lies in the plane area
-                    if ~((maxEleZ < currZ) || (minEleZ > currZ))%(minEleZ <= currZ && currZ + maxThickness <= maxEleZ)
+                    if ~((maxEleZ <= currZ) || (minEleZ > currZ))%(minEleZ <= currZ && currZ + maxThickness <= maxEleZ)
                         
                        % Set the new minAngle
                         minAngle = min(minAngle, angleToXYPlane);
