@@ -1,4 +1,4 @@
-function transformedSTL = stlTransform(stlToTransform, thetaX, thetaY, thetaZ, autoPlace, dX, dY, dZ, scale)
+function transformedSTL = stlTransform(stlToTransform, thetaX, thetaY, thetaZ, dX, dY, dZ, scale)
 
     % Credit: Rotation Code derrived from Khan Academy
     % https://www.khanacademy.org/computing/computer-programming/programming-games-visualizations/programming-3d-shapes/a/rotating-3d-shapes
@@ -24,10 +24,11 @@ function transformedSTL = stlTransform(stlToTransform, thetaX, thetaY, thetaZ, a
         stlPoints = rotateZ(stlPoints, thetaZ);
     end
     
-    % Auto-place coordinates if requested
-    if (autoPlace)
-        stlPoints = autoPlaceCoordinates(stlPoints);
-    elseif (dX ~= 0 || dY ~= 0 || dZ ~= 0)
+    % Place onto positive plane
+    stlPoints = autoPlaceCoordinates(stlPoints);
+    
+    % Translate if desired
+    if (dX > 0 || dY > 0 || dZ > 0)
         stlPoints = translateCoordinates(stlPoints, dX, dY, dZ);
     end
     
@@ -72,7 +73,7 @@ function coordinatesToRotate = rotateX(coordinatesToRotate, thetaX)
         
         for i = 1:abs(numOfNinetyDegRotations)
             
-            coordinatesToRotate = [coordinatesToRotate(:,1), direct * coordinatesToRotate(:,3), coordinatesToRotate(:,2)];
+            coordinatesToRotate = [coordinatesToRotate(:,1), -1 * direct * coordinatesToRotate(:,3), direct * coordinatesToRotate(:,2)];
             
         end
     
@@ -104,22 +105,40 @@ end
 
 function coordinatesToRotate = rotateY(coordinatesToRotate, thetaY)
 
-    const = 2 * pi / 360;
-    thetaY = thetaY * const;
-    sinTheta = sin(thetaY);
-    cosTheta = cos(thetaY);
+    % If the coordinate is a square angle (+/- 90, 180, 270), then just
+    % invert rows and columns of matrix
+    if mod(thetaY,90) == 0
+        
+        direct = thetaY/abs(thetaX);
+        numOfNinetyDegRotations = thetaY / 90;
+        
+        for i = 1:abs(numOfNinetyDegRotations)
+            
+            coordinatesToRotate = [direct * coordinatesToRotate(:,3), coordinatesToRotate(:,2), -1 * direct * coordinatesToRotate(:,1)];
+            
+        end
     
-    for point = 1:height(coordinatesToRotate)
-        
-        % Extract Points
-        currX = coordinatesToRotate(point, 1);
-        currZ = coordinatesToRotate(point, 3);
-        
-        % Modify X
-        coordinatesToRotate(point, 1) = currX * cosTheta + currZ * sinTheta;
-        
-        % Modify Z
-        coordinatesToRotate(point, 3) = currZ * cosTheta - currX * sinTheta;
+    % Otherwise, use sine/cosine rotation rules
+    else
+
+        const = 2 * pi / 360;
+        thetaY = thetaY * const;
+        sinTheta = sin(thetaY);
+        cosTheta = cos(thetaY);
+
+        for point = 1:height(coordinatesToRotate)
+
+            % Extract Points
+            currX = coordinatesToRotate(point, 1);
+            currZ = coordinatesToRotate(point, 3);
+
+            % Modify X
+            coordinatesToRotate(point, 1) = currX * cosTheta + currZ * sinTheta;
+
+            % Modify Z
+            coordinatesToRotate(point, 3) = currZ * cosTheta - currX * sinTheta;
+
+        end
         
     end
     
@@ -127,24 +146,40 @@ end
 
 function coordinatesToRotate = rotateZ(coordinatesToRotate, thetaZ)
     
-    const = 2 * pi / 360;
-    thetaZ = thetaZ * const;
-    sinTheta = sin(thetaZ);
-    cosTheta = cos(thetaZ);
+    % If the coordinate is a square angle (+/- 90, 180, 270), then just
+    % invert rows and columns of matrix
+    if mod(thetaY,90) == 0
+        
+        direct = thetaZ/abs(thetaX);
+        numOfNinetyDegRotations = thetaZ / 90;
+        
+        for i = 1:abs(numOfNinetyDegRotations)
+            
+            coordinatesToRotate = [-1 * direct *coordinatesToRotate(:,2), direct * coordinatesToRotate(:,1), coordinatesToRotate(:,3)];
+            
+        end
     
-    for point = 1:height(coordinatesToRotate)
-        
-        % Extract Points
-        currX = coordinatesToRotate(point, 1);
-        currY = coordinatesToRotate(point, 2);
-        
-        % Modify X
-        coordinatesToRotate(point, 1) = currX * cosTheta - currY * sinTheta;
-        
-        % Modify Y
-        coordinatesToRotate(point, 2) = currY * cosTheta + currX * sinTheta;
-        
+    % Otherwise, use sine/cosine rotation rules
+    else
+
+        const = 2 * pi / 360;
+        thetaZ = thetaZ * const;
+        sinTheta = sin(thetaZ);
+        cosTheta = cos(thetaZ);
+
+        for point = 1:height(coordinatesToRotate)
+
+            % Extract Points
+            currX = coordinatesToRotate(point, 1);
+            currY = coordinatesToRotate(point, 2);
+
+            % Modify X
+            coordinatesToRotate(point, 1) = currX * cosTheta - currY * sinTheta;
+
+            % Modify Y
+            coordinatesToRotate(point, 2) = currY * cosTheta + currX * sinTheta;
+
+        end
     end
-    
 end
     
