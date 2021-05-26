@@ -78,11 +78,11 @@ classdef FlatUniformSliceGenerator < handle
             end
             
             % Otherwise, if paths exist, the special points can be ignored.
-            % However, some repeated paths may exist. Tesselate Paths
-            % together.
+            % However, some repeated paths or point data may exist. Filter 
+            % and then tesslate paths together.
             
             % Remove paths which start and end at the same point
-            rowsToRemove = zeros(0);
+            rowsToRemove = [];
             for i=1:height(slicePaths)
                
                 if slicePaths(i,1) == slicePaths(i,4) && slicePaths(i,2) == slicePaths(i,5) && slicePaths(i,3) == slicePaths(i,6)
@@ -92,6 +92,23 @@ classdef FlatUniformSliceGenerator < handle
             end
             slicePaths(rowsToRemove,:) = [];
             
+            % Now, remove duplicate paths
+            % Firstly, store all the unique paths & delete from slicePaths
+            [uniqueSlicePaths, uniqueSlicePathIndexes, ~] = unique(slicePaths, 'rows');
+            slicePaths(uniqueSlicePathIndexes,:) = [];
+
+            % For the remaining duplicates, add one copy to the unique
+            % paths
+            singleInstanceSlicePath = [];
+            for i = 1:height(slicePaths)
+                if ~ismember(singleInstanceSlicePath, slicePaths(i,:))
+                    singleInstanceSlicePath = slicePaths(i,:);
+                end
+            end
+
+            %Restore all the unique paths to the slicePaths
+            slicePaths = [uniqueSlicePaths; singleInstanceSlicePath];
+                
             % Create paths - continues to loop for each continuous path
             % until all paths have been generated.
             currentPath = 0;

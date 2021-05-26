@@ -7,11 +7,7 @@ function transformedSTL = stlTransform(stlToTransform, thetaX, thetaY, thetaZ, a
     stlPoints = stlToTransform.Points;
     stlConList = stlToTransform.ConnectivityList;
     
-    % Convert angles in Degrees into Radians
-    const = 2 * pi / 360;
-    thetaX = thetaX * const;
-    thetaY = thetaY * const;
-    thetaZ = thetaZ * const;
+    % Perform rotations
     
     % Rotate object on X axis
     if thetaX ~= 0
@@ -66,28 +62,50 @@ function coordinatesToAutoPlace = autoPlaceCoordinates(coordinatesToAutoPlace)
 end
 
 function coordinatesToRotate = rotateX(coordinatesToRotate, thetaX)
-
-    sinTheta = sin(thetaX);
-    cosTheta = cos(thetaX);
     
-    for point = 1:height(coordinatesToRotate)
+    % If the coordinate is a square angle (+/- 90, 180, 270), then just
+    % invert rows and columns of matrix
+    if mod(thetaX,90) == 0
         
-        % Extract Points
-        currY = coordinatesToRotate(point, 2);
-        currZ = coordinatesToRotate(point, 3);
+        direct = thetaX/abs(thetaX);
+        numOfNinetyDegRotations = thetaX / 90;
         
-        % Modify Y
-        coordinatesToRotate(point, 2) = currY * cosTheta - currZ * sinTheta;
+        for i = 1:abs(numOfNinetyDegRotations)
+            
+            coordinatesToRotate = [coordinatesToRotate(:,1), direct * coordinatesToRotate(:,3), coordinatesToRotate(:,2)];
+            
+        end
+    
+    % Otherwise, use sine/cosine rotation rules
+    else
         
-        % Modify Z
-        coordinatesToRotate(point, 3) = currZ * cosTheta + currY * sinTheta;
-        
+        % Calculate the angle in radians and find sine/cosine components
+        const = 2 * pi / 360;
+        thetaX = thetaX * const;
+        sinTheta = sin(thetaX);
+        cosTheta = cos(thetaX);
+
+        for point = 1:height(coordinatesToRotate)
+
+            % Extract Points
+            currY = coordinatesToRotate(point, 2);
+            currZ = coordinatesToRotate(point, 3);
+
+            % Modify Y
+            coordinatesToRotate(point, 2) = currY * cosTheta - currZ * sinTheta;
+
+            % Modify Z
+            coordinatesToRotate(point, 3) = currZ * cosTheta + currY * sinTheta;
+
+        end
     end
     
 end
 
 function coordinatesToRotate = rotateY(coordinatesToRotate, thetaY)
 
+    const = 2 * pi / 360;
+    thetaY = thetaY * const;
     sinTheta = sin(thetaY);
     cosTheta = cos(thetaY);
     
@@ -108,7 +126,9 @@ function coordinatesToRotate = rotateY(coordinatesToRotate, thetaY)
 end
 
 function coordinatesToRotate = rotateZ(coordinatesToRotate, thetaZ)
-
+    
+    const = 2 * pi / 360;
+    thetaZ = thetaZ * const;
     sinTheta = sin(thetaZ);
     cosTheta = cos(thetaZ);
     
