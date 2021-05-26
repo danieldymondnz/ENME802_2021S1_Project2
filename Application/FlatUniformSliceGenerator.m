@@ -19,7 +19,7 @@ classdef FlatUniformSliceGenerator < handle
         sliceThickness = 0.2;
         
         % Stores the slicer path points for this object
-        slicePath
+        slicePath = [];
         
         % Accuracy of slicer
         slicerTol = 1e-5;
@@ -156,7 +156,8 @@ classdef FlatUniformSliceGenerator < handle
             % Iterate and generate the slices paths for each layer
             for zHeightIndex = 1:height(sliceHeights)
                 currZ = sliceHeights(zHeightIndex);
-                obj.slicePath = [obj.slicePath; slicePathLayer(obj, currZ)];
+                dSlice = slicePathLayer(obj, currZ);
+                obj.slicePath = [obj.slicePath; dSlice];
             end
         
         end
@@ -176,7 +177,8 @@ classdef FlatUniformSliceGenerator < handle
             
             % If there is only one pair, then return the single pair
             elseif numPromisePairs == 1
-                path = [slicePaths(1, 1:3); slicePaths(1, 4:6), currentPathNumber];
+                path = [slicePaths(1, 1:3), currentPathNumber; slicePaths(1, 4:6), currentPathNumber];
+                slicePaths(1,:) = [];
                 return
             end
 
