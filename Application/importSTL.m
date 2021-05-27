@@ -9,20 +9,20 @@ function obj = importSTL(fileLocation)
     zMap = containers.Map('KeyType','double','ValueType','double');
 
 
-% fileLocation = "Test Objects\Box.STL";
-fid = fopen(fileLocation);
+    % fileLocation = "Test Objects\Box.STL";
+    fid = fopen(fileLocation);
 
-% data = fread(fid);
-% header = data(1:80);
+    % data = fread(fid);
+    % header = data(1:80);
 
-% headerLength = fread(fid,80,'int8');
-% title2 = convertCharsToStrings( native2unicode(headerLength,'ascii') ) ;
+    % headerLength = fread(fid,80,'int8');
+    % title2 = convertCharsToStrings( native2unicode(headerLength,'ascii') ) ;
 
-% look for endSolid at the end, and if it exists then end the code.
+    % look for endSolid at the end, and if it exists then end the code.
 
-frewind(fid); % Go back to top of fid binary.
-header = fread(fid,80,'int8');
-title = convertCharsToStrings( native2unicode(header,'ascii') );
+    frewind(fid); % Go back to top of fid binary.
+    header = fread(fid,80,'int8');
+    title = convertCharsToStrings( native2unicode(header,'ascii') );
 
 if contains(title,"facet normal")
     %     error('ERROR: Please provide an STL file that is encoded in Binary not ASCII. MATLAB can not handle the amount of bytes in ASCII STLs''')
@@ -141,7 +141,7 @@ else
         [index2, verticesStored] = getVertice(point2(1,1), point2(2,1), point2(3,1), xMap, yMap, zMap, verticesStored);
         [index3, verticesStored] = getVertice(point3(1,1), point3(2,1), point3(3,1), xMap, yMap, zMap, verticesStored);
         
-        [verticeIndex, verticesStored] = getVertice(xPos, yPos, zPos, xMap, yMap, zMap, verticesStored)
+        %[verticeIndex, verticesStored] = getVertice(xPos, yPos, zPos, xMap, yMap, zMap, verticesStored)
         
 %         Check here if x y z coordinates already exists.
 %         if( sum( ismember(points,[point1(1,1) point1(2,1) point1(3,1)],'rows') ) >=1)
@@ -171,6 +171,8 @@ else
         connectivityList(i,:) = [index1 index2 index3]; % connectivity list pattern
         
     end
+    
+    %
     
     fclose(fid);
     obj = triangulation(connectivityList,points);
@@ -228,4 +230,13 @@ function [verticeIndex, verticesStored] = getVertice(xPos, yPos, zPos, xMap, yMa
     
 end
 
+function points = generatePointsList(xMap, yMap, zMap, verticesStored)
+
+    points = zeros(verticesStored, 3);
+    
+    % for each map
+    
+    
+
+end
 
