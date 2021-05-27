@@ -19,7 +19,7 @@ classdef FlatUniformSliceGenerator < handle
         sliceThickness = 0.2;
         
         % Stores the slicer path points for this object
-        slicePath
+        slicePath = [];
         
         % Accuracy of slicer
         slicerTol = 1e-5;
@@ -78,11 +78,11 @@ classdef FlatUniformSliceGenerator < handle
             end
             
             % Otherwise, if paths exist, the special points can be ignored.
-            % However, some repeated paths may exist. Tesselate Paths
-            % together.
+            % However, some repeated paths or point data may exist. Filter 
+            % and then tesslate paths together.
             
             % Remove paths which start and end at the same point
-            rowsToRemove = zeros(0);
+            rowsToRemove = [];
             for i=1:height(slicePaths)
                
                 if slicePaths(i,1) == slicePaths(i,4) && slicePaths(i,2) == slicePaths(i,5) && slicePaths(i,3) == slicePaths(i,6)
@@ -92,6 +92,23 @@ classdef FlatUniformSliceGenerator < handle
             end
             slicePaths(rowsToRemove,:) = [];
             
+            % Now, remove duplicate paths
+            % Firstly, store all the unique paths & delete from slicePaths
+            [uniqueSlicePaths, uniqueSlicePathIndexes, ~] = unique(slicePaths, 'rows');
+            slicePaths(uniqueSlicePathIndexes,:) = [];
+
+            % For the remaining duplicates, add one copy to the unique
+            % paths
+            singleInstanceSlicePath = [];
+            for i = 1:height(slicePaths)
+                if ~ismember(singleInstanceSlicePath, slicePaths(i,:))
+                    singleInstanceSlicePath = slicePaths(i,:);
+                end
+            end
+
+            %Restore all the unique paths to the slicePaths
+            slicePaths = [uniqueSlicePaths; singleInstanceSlicePath];
+                
             % Create paths - continues to loop for each continuous path
             % until all paths have been generated.
             currentPath = 0;
@@ -139,7 +156,8 @@ classdef FlatUniformSliceGenerator < handle
             % Iterate and generate the slices paths for each layer
             for zHeightIndex = 1:height(sliceHeights)
                 currZ = sliceHeights(zHeightIndex);
-                obj.slicePath = [obj.slicePath; slicePathLayer(obj, currZ)];
+                dSlice = slicePathLayer(obj, currZ);
+                obj.slicePath = [obj.slicePath; dSlice];
             end
         
         end
@@ -159,7 +177,8 @@ classdef FlatUniformSliceGenerator < handle
             
             % If there is only one pair, then return the single pair
             elseif numPromisePairs == 1
-                path = [slicePaths(1, 1:3); slicePaths(1, 4:6), currentPathNumber];
+                path = [slicePaths(1, 1:3), currentPathNumber; slicePaths(1, 4:6), currentPathNumber];
+                slicePaths(1,:) = [];
                 return
             end
 
