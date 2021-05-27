@@ -24,70 +24,6 @@ classdef FlatAdaptiveSliceGenerator < FlatUniformSliceGenerator
             obj = obj@FlatUniformSliceGenerator(data, preferedThickness);
         end
         
-        % Determines the angle of the element
-%         function [isOnPlane, angle, residualHeight] = checkElement(obj, elementNumber, currZ, minZ, maxZ)
-%         % Determines the residual height of the element relative to the
-%         % current slice and the element's angle relative to the x-y plane
-%             
-%             % Initalise values
-%             isOnPlane = 0;
-%             angle = 0;
-%             residualHeight = 0;
-%             
-%             % Parse the data for this element
-%             elementVertices = getElementData(obj, elementNumber);
-%             numOfVertices = height(elementVertices);
-%             
-%             % If any part of the element lies on the plane, process
-%             for vertice = 1:numOfVertices
-%                 
-%                 n1 = vertice;
-%                 n2 = vertice + 1;
-%                 
-%                 if (vertice >= numOfVertices)
-%                     n2 = 1;
-%                 end
-%                     
-%                 z1 = elementVertices(n1,3);
-%                 z2 = elementVertices(n2,3);
-%                 
-%                 if ((z1 <= minZ && minZ <= z2) || (minZ <= z1 && z2 <= minZ))
-%                     
-%                     isOnPlane = 1;
-%                     continue;
-%                     
-%                 elseif ((z1 <= maxZ && maxZ <= z2) || (maxZ <= z1 && z2 <= maxZ))
-%                     
-%                     isOnPlane = 1;
-%                     continue;
-%                     
-%                 end
-%                 
-%             end
-%             
-%             % If this element doesn't lie on the plane, return nothing
-%             if isOnPlane == 0
-%                 return
-%             end
-%             
-%             % Otherwise, process element
-%             
-%             % Generate the Vectors for two edge U, V on the triangle
-%             U = elementVertices(2,:) - elementVertices(1,:);
-%             V = elementVertices(3,:) - elementVertices(1,:);
-%             
-%             % Generate the normal vector
-%             N = cross(U, V);
-%             N = N/norm(N);
-%             
-%             % Analyse the Z Vector
-%             angleXZ = abs(atan(N(3)/N(1)));
-%             angleYZ = abs(atan(N(3)/N(2)));
-%             
-%             % Return the min angle
-%             angle = (pi/2) - min(angleXZ, angleYZ);
-%             
-%         end
         
         % Generates and stores the information for the
         % adaptiveSlicerElementInformation matrix.
@@ -159,7 +95,7 @@ classdef FlatAdaptiveSliceGenerator < FlatUniformSliceGenerator
                     maxEleZ = information(1,3);
                     
                     % If element lies in the plane area
-                    if ~((maxEleZ < currZ) || (minEleZ > currZ))%(minEleZ <= currZ && currZ + maxThickness <= maxEleZ)
+                    if ~((maxEleZ <= currZ) || (minEleZ > currZ))%(minEleZ <= currZ && currZ + maxThickness <= maxEleZ)
                         
                        % Set the new minAngle
                         minAngle = min(minAngle, angleToXYPlane);
