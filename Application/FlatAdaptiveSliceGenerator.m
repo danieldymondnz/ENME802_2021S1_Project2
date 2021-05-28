@@ -175,5 +175,6 @@ classdef FlatAdaptiveSliceGenerator < FlatUniformSliceGenerator
 
         end
     end
+    
 end
 
