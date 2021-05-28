@@ -2,7 +2,7 @@ fileLocation = "Test Objects/cubewithhole.STL";
 
 % Inputs
 stl = importSTL(fileLocation);
-stl = stlTransform(stl, 90, 0, 0, 1, 0, 0, 0, 100);
+stl = stlTransform(stl, 90, 0, 0, 0, 0, 0, 100);
 sliceHeight = 0.2;
 sliceGen = FlatUniformSliceGenerator(stl,sliceHeight);
 layer = 50;
