@@ -4,6 +4,7 @@ function obj = importSTL(fileLocation)
     % length for the HashMaps
     verticesStored = 0;
     points = [];
+    tollerance = 4;
 
     % Create the Point Maps
     xMap = containers.Map('KeyType','double','ValueType','any');
@@ -134,17 +135,25 @@ function [verticeIndex, verticesStored, points] = getVertice(xPos, yPos, zPos, x
     matchingXVertices = [];
     matchingYVertices = [];
     matchingZVertices = [];
-
+    
+    % Get the Pairs from the maps
     isX = xMap.isKey(xPos);
+    if isX
+       matchingXVertices = xMap(xPos);
+    end
+    
     isY = yMap.isKey(yPos);
+    if isY
+        matchingYVertices = yMap(yPos);
+    end
+    
     isZ = zMap.isKey(zPos);
+    if isZ
+         matchingZVertices = zMap(zPos);
+    end
+    
 
     if (isX && isY && isZ)
-
-        % Get the Pairs from the maps
-        matchingXVertices = xMap(xPos);
-        matchingYVertices = yMap(yPos);
-        matchingZVertices = zMap(zPos);
 
         % If either of the three results are length 0, then a point is not
         % common and should be created
