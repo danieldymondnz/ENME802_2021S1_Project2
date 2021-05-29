@@ -38,7 +38,7 @@ function layer_paths = Layer_Builder(Px,Py,Pz,N_layers,layerT)
                     V_13 = (1/layerT)*((cross(V1,V3))/(norm(cross(V1,V3))));
                     V_23 = (1/layerT)*((cross(V3,V2))/(norm(cross(V3,V2))));
                     alpha = acosd(dot(V_13,V_23)/((norm(V_13))*(norm(V_23))));
-                    V5 = (1/layerT/(cos(alpha/2)))*((V_13 + V_23)/(norm(V_13 + V_23)));
+                    V5 = ((1/layerT)/(cos(alpha/2)))*((V_13 + V_23)/(norm(V_13 + V_23)));
                     
                     %Add the offset (V5) to the location of the original
                     %point
