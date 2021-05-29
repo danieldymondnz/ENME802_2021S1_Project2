@@ -4,7 +4,6 @@ function obj = importSTL(fileLocation)
     % length for the HashMaps
     verticesStored = 0;
     points = [];
-    tollerance = 4;
 
     % Create the Point Maps
     xMap = containers.Map('KeyType','double','ValueType','any');
@@ -30,11 +29,10 @@ function obj = importSTL(fileLocation)
     
         frewind(fid); % Go back to top of fid binary.
         header = fread(fid,80,'int8');
-        title = convertCharsToStrings( native2unicode(header,'ascii') );
+        title = convertCharsToStrings(native2unicode(header,'ascii') );
 
         % nfaces = data(81);
         nfaces = fread(fid,1,'int32');
-
         nvert = 3*nfaces; % number of vertices
 
         %points = zeros(nvert,3);
@@ -65,12 +63,11 @@ function obj = importSTL(fileLocation)
 
         end
 
-        % obj = triangulation(connectivityList,points);
-        fclose(fid);
-        obj = triangulation(connectivityList,points);
-    
-    % ASCII PART
+        
+        
+    % Otherwise, this is an ASCII file, so read as an ASCII file.
     else
+        
         frewind(fid);
         %     textscan(fid,'%s','delimiter','\n');
         data = fread(fid,'int8');
@@ -88,7 +85,7 @@ function obj = importSTL(fileLocation)
         %points = zeros(nvert,3);
         connectivityList = zeros(nfaces,3);
 
-
+        % For each of the elements/faces
         for i=1:sum(contains(data,"endfacet"))
             temp = data((i*7-5):(i*7+1));
 
@@ -101,34 +98,30 @@ function obj = importSTL(fileLocation)
             temp3 = split( strtrim(temp(5)), ' ' );
             %         point3 = [str2double(temp3(2));str2double(temp3(3));str2double(temp3(4))];
             point3 = str2double(temp3(2:end));
-
-            index1 = 3*i-2;
-            index2 = 3*i-1;
-            index3 = 3*i;
-
+            
             % Get the indexes of the X, Y, Z coordinates
-
             [index1, verticesStored, points] = getVertice(point1(1,1), point1(2,1), point1(3,1), xMap, yMap, zMap, verticesStored, points);
             [index2, verticesStored, points] = getVertice(point2(1,1), point2(2,1), point2(3,1), xMap, yMap, zMap, verticesStored, points);
             [index3, verticesStored, points] = getVertice(point3(1,1), point3(2,1), point3(3,1), xMap, yMap, zMap, verticesStored, points);
-
-            %[verticeIndex, verticesStored] = getVertice(xPos, yPos, zPos, xMap, yMap, zMap, verticesStored)
-
-
-            connectivityList(i,:) = [index1 index2 index3]; % connectivity list pattern
+            
+            % Store Element in the Connectivity List
+            connectivityList(i,:) = [index1 index2 index3];
 
         end
-
-        %points = generatePointsList(xMap, yMap, zMap, verticesStored);
-
-        fclose(fid);
-        obj = triangulation(connectivityList,points);
     end
 
-
+    % Close the File
+    fclose(fid);
+    
+    % Use the generated data to create a Triangulation Object to return to
+    % the calling function.
+    obj = triangulation(connectivityList,points);
+    
 end
 
-%
+% Returns the index of a given vertice in the model. If no existing vertice
+% exists, this function will automatically generate a new vertice and
+% return the index.
 function [verticeIndex, verticesStored, points] = getVertice(xPos, yPos, zPos, xMap, yMap, zMap, verticesStored, points)
 
     matchFound = 0;
@@ -152,7 +145,8 @@ function [verticeIndex, verticesStored, points] = getVertice(xPos, yPos, zPos, x
          matchingZVertices = zMap(zPos);
     end
     
-
+    % If there are matching X, Y and Z vertices, then check to see if there
+    % is a match in the points list.
     if (isX && isY && isZ)
 
         % If either of the three results are length 0, then a point is not
@@ -160,13 +154,15 @@ function [verticeIndex, verticesStored, points] = getVertice(xPos, yPos, zPos, x
         if (isempty(matchingXVertices)) || (isempty(matchingYVertices)) || (isempty(matchingZVertices))
             matchFound = 0;
 
-            % Otherwise, if a common verticeIndex is shared among the three maps, then the
-            % vertice already exists
+        % Otherwise, if a common verticeIndex is shared among the three maps, then the
+        % vertice already exists
         else
             [xyIndexes, ~] = intersect(matchingXVertices, matchingYVertices);
             [yzIndexes, ~] = intersect(matchingYVertices, matchingZVertices);
             [index, ~] = intersect(xyIndexes, yzIndexes);
 
+            % If the vertice exists (same point across all 3 maps), then
+            % set the match flag to 1
             if ~isempty(index)
                 matchFound = 1;
             end
@@ -174,11 +170,11 @@ function [verticeIndex, verticesStored, points] = getVertice(xPos, yPos, zPos, x
         end
     end
 
+    % If a match is found, then return this index
     if matchFound == 1
         verticeIndex = index;
-        verticesStored = verticesStored;
 
-        % Otherwise, generate a new pair
+    % Otherwise, generate a new pair
     else
         verticesStored = verticesStored + 1;
         verticeIndex = verticesStored;
