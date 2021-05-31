@@ -147,7 +147,9 @@ classdef FlatAdaptiveSliceGenerator < FlatUniformSliceGenerator
             end
             
             % Add the top layer
-            sliceHeights = [sliceHeights; maxZ];
+            if sliceHeights(end) ~= maxZ
+                sliceHeights = [sliceHeights; maxZ];
+            end
             
         end
            
