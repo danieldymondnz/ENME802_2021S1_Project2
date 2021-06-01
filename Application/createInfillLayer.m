@@ -134,14 +134,24 @@ warning('off','all')
 %             
 %             infillPath(tempRegion(interior),4) = k;
 %          end
-
+    
     
     
     [row,~] = find(isnan(infillPath));
-    infillPath(row,1:2) = NaN;
-    infillPath(:,4) = 1;
+    infillPath(row,1:4) = NaN;
+%     infillPath(:,4) = 1;
     
-    
+        % Im sorry daniel post processing is the only way I could think of :(
+%     % find each z layer using slice gen.
+%     zThickness = sliceGen.sliceThickness;
+%     for i = 0:zThickness:max(infillPath(:,3))
+%         % Index of current z axis.
+%         zIndex = find(ismember(infillPath(:,3),sliceGen.sliceThickness));
+%         
+%         % Go through the z axis and check for NaN in x y axis, if NaN next ones
+%         % increase part num by 1.
+%         nanIndex = l;
+%     end
     
     
     %%%%%%%%%% THIS IS ALL YOU NEED TO PLOT IT DANIEL%%%%%%%%%
