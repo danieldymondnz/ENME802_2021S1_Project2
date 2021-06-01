@@ -103,15 +103,15 @@ warning('off','all')
                     infillPath(tempHeight+1:(tempHeight)+height(in),1:2) = in(:,1:2);
                     flip = 1;
                 end
-        %             plot(infillPath(:,1),infillPath(:,2));
+                
         
             else
                 
-                if height(infillPath) ~= 0 & ~isnan(infillPath(height(infillPath),:)) 
+%                 if height(infillPath) ~= 0 & ~isnan(infillPath(height(infillPath),:)) 
                     infillPath(height(infillPath)+1,:) = NaN;
 %                     infillPartNum = infillPartNum +1;
 
-                end
+%                 end
             end
             infillPath(tempHeight+1:tempHeight+height(in),3) = zHeight;
 %             infillPath(tempHeight+1:tempHeight+height(in),4) = infillPartNum;
@@ -136,22 +136,39 @@ warning('off','all')
 %          end
     
     
-    
+    end 
     [row,~] = find(isnan(infillPath));
+    infillPath(:,4) = 1;
     infillPath(row,1:4) = NaN;
-%     infillPath(:,4) = 1;
+    
     
         % Im sorry daniel post processing is the only way I could think of :(
-%     % find each z layer using slice gen.
-%     zThickness = sliceGen.sliceThickness;
-%     for i = 0:zThickness:max(infillPath(:,3))
-%         % Index of current z axis.
-%         zIndex = find(ismember(infillPath(:,3),sliceGen.sliceThickness));
-%         
-%         % Go through the z axis and check for NaN in x y axis, if NaN next ones
-%         % increase part num by 1.
-%         nanIndex = l;
-%     end
+    % find each z layer using slice gen.
+    zThickness = sliceGen.sliceThickness;
+    for i = 0:zThickness:max(infillPath(:,3))
+        % Index of current z axis.
+        zIndex = find(ismember(infillPath(:,3),i));
+        
+        % Go through the z axis and check for NaN in x y axis, if NaN next ones
+        % increase part num by 1.
+        nanIndex = find(isnan(infillPath(min(zIndex):max(zIndex),4)))+(min(zIndex)-1);
+        if ~isempty(nanIndex)
+            if (height(nanIndex) == 1)
+                infillPath(nanIndex:max(zIndex),4) = infillPath(nanIndex:max(zIndex),4) + 1;
+            else
+                tempCounter = 1;
+                for j = 1: height(nanIndex)-1
+                    infillPath(nanIndex(j,:):nanIndex(j+1,:),4)= infillPath(nanIndex(j,:):nanIndex(j+1,:),4)+(j);
+                    tempCounter = j;
+                end
+                
+                if (j == height(nanIndex)-1)
+                infillPath(nanIndex(tempCounter+1):max(zIndex),4) = infillPath(nanIndex(tempCounter+1):max(zIndex),4) + (tempCounter+1);
+                end
+            end
+        end
+        
+    end
     
     
     %%%%%%%%%% THIS IS ALL YOU NEED TO PLOT IT DANIEL%%%%%%%%%
@@ -159,7 +176,11 @@ warning('off','all')
 %     plot3(infillPath(:,1),infillPath(:,2),infillPath(:,3));
 %     scatter3(infillPath(:,1),infillPath(:,2),infillPath(:,3));
 %     view(3);
-    
+    infillPath = nanCleanUp(infillPath);
     
     
 end
+
+
+
+
