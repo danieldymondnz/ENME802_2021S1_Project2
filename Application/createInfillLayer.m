@@ -106,44 +106,22 @@ warning('off','all')
                 
         
             else
-                
-%                 if height(infillPath) ~= 0 & ~isnan(infillPath(height(infillPath),:)) 
-                    infillPath(height(infillPath)+1,:) = NaN;
-%                     infillPartNum = infillPartNum +1;
+                % Handles if there's a gap in the x axis.
+                infillPath(height(infillPath)+1,:) = NaN;
 
-%                 end
             end
             infillPath(tempHeight+1:tempHeight+height(in),3) = zHeight;
-%             infillPath(tempHeight+1:tempHeight+height(in),4) = infillPartNum;
-            
-            
-           
+       
         end
-        infillPath(height(infillPath)+1,:) = NaN;
-%         infillPartNum = infillPartNum +1;
-        
-%         infillPath(1:height(infillPath),4) = 1;
-%         infillPartNum = 1;
 
-
-%         region = regions(layerPolygon);
-%         
-%         for k = 1:height(region)
-%             tempRegion = find(ismember(infillPath(:,3),zHeight));
-%             interior = find(isinterior(region(k,1),infillPath(min(tempRegion):max(tempRegion),1:2)));
-%             
-%             infillPath(tempRegion(interior),4) = k;
-%          end
-    
-    
     end 
     [row,~] = find(isnan(infillPath));
     infillPath(:,4) = 1;
     infillPath(row,1:4) = NaN;
     
     
-        % Im sorry daniel post processing is the only way I could think of :(
-    % find each z layer using slice gen.
+    % Im sorry daniel post processing is the only way I could think of :(
+    % find each z layer from slice gen.
     zThickness = sliceGen.sliceThickness;
     for i = 0:zThickness:max(infillPath(:,3))
         % Index of current z axis.
@@ -170,12 +148,7 @@ warning('off','all')
         
     end
     
-    
-    %%%%%%%%%% THIS IS ALL YOU NEED TO PLOT IT DANIEL%%%%%%%%%
-%     hold on;
-%     plot3(infillPath(:,1),infillPath(:,2),infillPath(:,3));
-%     scatter3(infillPath(:,1),infillPath(:,2),infillPath(:,3));
-%     view(3);
+    % Clean NaN so export doesn't have it.
     infillPath = nanCleanUp(infillPath);
     
     
