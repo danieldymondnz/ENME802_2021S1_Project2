@@ -25,8 +25,8 @@ for i = 1:res+1
              U(1,e+1-exp) =((i-1)/res)^exp;                                 % Based on equation provided in class
              W(e+1-exp,1) =((j-1)/res)^exp;                                 % Based on equation provided in class
            end
-        % Coordinates of surface points (will be used in Cutter path)
-        Px(i,j) = U*N*Bx*NT*W;                                        
+        % Coordinates of surface points
+        Px(i,j) = U*N*Bx*NT*W;                                              % Thes equations are derived from literature                                         
         Py(i,j) = U*N*By*NT*W;
         Pz(i,j) = U*N*Bz*NT*W;
 
