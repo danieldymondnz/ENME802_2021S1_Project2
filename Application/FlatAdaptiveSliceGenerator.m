@@ -1,6 +1,4 @@
 classdef FlatAdaptiveSliceGenerator < FlatUniformSliceGenerator
-    %UNTITLED Summary of this class goes here
-    %   Detailed explanation goes here
     
     properties (SetAccess = protected)
               
@@ -23,7 +21,6 @@ classdef FlatAdaptiveSliceGenerator < FlatUniformSliceGenerator
         function obj = FlatAdaptiveSliceGenerator(data, preferedThickness)
             obj = obj@FlatUniformSliceGenerator(data, preferedThickness);
         end
-        
         
         % Generates and stores the information for the
         % adaptiveSlicerElementInformation matrix.
@@ -60,11 +57,10 @@ classdef FlatAdaptiveSliceGenerator < FlatUniformSliceGenerator
     
     methods (Access = protected)
         
-        % Overrides the Uniform Slicer's Z Generator method to instead
-        % create adaptive slices
         function sliceHeights = generateSliceHeights(obj)
-        % Generates the Z values for which each of the flat layer slices
-        % will be generated at.
+        % Overrides the Uniform Slicer's Z Generator method to instead
+        % create adaptive slices, returning the Z heights at which the
+        % model should be sliced.
         
             % Generate Element Information
             generateAdaptiveSlicerElementInformation(obj);
@@ -108,8 +104,6 @@ classdef FlatAdaptiveSliceGenerator < FlatUniformSliceGenerator
                         minResidualHeight = min(minResidualHeight,elementResidHeight);
                         
                     end
-
-                    
                      
                 end
                 
@@ -141,7 +135,7 @@ classdef FlatAdaptiveSliceGenerator < FlatUniformSliceGenerator
                 % Append the current Z
                 sliceHeights = [sliceHeights; currZ];
                 
-                % Increment
+                % Increment current height
                 currZ = currZ + deltaZ;
                 
             end
@@ -154,7 +148,8 @@ classdef FlatAdaptiveSliceGenerator < FlatUniformSliceGenerator
         end
            
         function angleToZ = determineAngleToZ(obj, elementVertices)
-           
+        % Determine the angle to the XY-plane usinig cross product
+            
             % Generate two vectors
             U = elementVertices(2,:) - elementVertices(1,:);
             V = elementVertices(3,:) - elementVertices(1,:);
@@ -176,6 +171,7 @@ classdef FlatAdaptiveSliceGenerator < FlatUniformSliceGenerator
             angleToZ = abs(acosd(dotProduct / (norm(N) * norm(Z))));
 
         end
+        
     end
     
 end

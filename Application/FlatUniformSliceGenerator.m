@@ -42,6 +42,11 @@ classdef FlatUniformSliceGenerator < handle
             slicePath = obj.slicePath;
         end
         
+          
+    end
+    
+    methods (Access = protected)
+        
         % Inspect each slice and determine elements which are cut
         function points = slicePathLayer(obj, zHeight)
         
@@ -119,10 +124,6 @@ classdef FlatUniformSliceGenerator < handle
             end
             
         end
-          
-    end
-    
-    methods (Access = protected)
         
         function sliceHeights = generateSliceHeights(obj)
         % Generates the Z values for which each of the flat layer slices
@@ -399,8 +400,8 @@ classdef FlatUniformSliceGenerator < handle
         end
         
         function elementData = getElementData(obj, elementNumber)
-        % Obtain the X,Y,Z Coordinate for each node of an element on the
-        % object
+        % Obtain the X,Y,Z Coordinate for each node of an element on a
+        % model
         
             % Lookup Element in Connectivity List and obtain node numbers
             if (elementNumber > obj.numOfElements || elementNumber < 1)
