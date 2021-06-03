@@ -50,7 +50,7 @@ warning('off','all')
 
         % Find all the points from min X to max X with incriment of infill
         % distance.
-        res = linspace(minX,maxX,(maxX-minX)/infillDistance);
+        res = linspace(minX,maxX,(maxX-minX)/infillDistance)-1;
         res = transpose(res);
 
         % Pass back into a variable where intersect can understand.
@@ -74,7 +74,8 @@ warning('off','all')
             if height(infillPath) == 0 && ~isempty(in)
                 infillPath = in;
             elseif ~isempty(in)
-%                 infillPath(tempHeight+1,:) = infillPath(tempHeight,1:4);
+%                 infillPath(tempHeight+1,:) = infillPath(tempHeight,1:4);         
+                tempHeight = height(infillPath);
                 % Flip flop to alternate to draw lines bottom and top.
                 if flip ==1
                     infillPath(tempHeight+1:(tempHeight)+height(in),1:2) = flipud(in(:,1:2));
@@ -83,6 +84,7 @@ warning('off','all')
                     infillPath(tempHeight+1:(tempHeight)+height(in),1:2) = in(:,1:2);
                     flip = 1;
                 end
+                
                 
         
             else
