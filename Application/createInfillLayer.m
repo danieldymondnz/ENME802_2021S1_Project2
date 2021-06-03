@@ -1,20 +1,6 @@
 function [infillPath] = createInfillLayer(sliceGen,infillDistance)
 warning('off','all')
-%     clear all
 
-%     fileLocation = "Test Objects/AdaptiveSlicingFigureA.STL";
-
-    % Inputs
-%     stl = stlread(fileLocation);
-%     stl = stlTransform(stl, 90, 0, 0, 0, 0, 0, 100);
-
-%     sliceHeight = 0.2;
-    % sliceGen = FlatUniformSliceGenerator(stl,sliceHeight);
-%     sliceGen = FlatAdaptiveSliceGenerator(stl,sliceHeight);
-    % layer = 16.8;
-
-    % Set infill Distance
-%     infillDistance = 2;
 
     slicePath = sliceGen.getSlicePath;
     infillPath = [];
@@ -23,7 +9,7 @@ warning('off','all')
     for j =1:height(C)
         % This will be handled by Module 2 GUI
 
-        layerPath = sliceGen.slicePathLayer(C(j));
+         layerPath = slicePath(slicePath(:,3) == C(j),:);
 %         layerPath = sliceGen.slicePathLayer(14);
 
         % Find minimum x and y values of layer path to set template of infill.
@@ -64,7 +50,8 @@ warning('off','all')
         
                 % Create Polygon Shape
         layerPolygon = polyshape(polyLayerPath(:,1),polyLayerPath(:,2));
-
+%         plot(layerPolygon);
+%         hold on;
         % Find all the points from min X to max X with incriment of infill
         % distance.
         res = linspace(minX,maxX,(maxX-minX)/infillDistance);
@@ -87,7 +74,7 @@ warning('off','all')
             lineseg = [res(i,:) minLineseg(1,1); res(i,:) maxLineseg(1,1)];
 
             
-            [in,out] = intersect(layerPolygon,lineseg);
+            [in,~] = intersect(layerPolygon,lineseg);
             
             tempHeight = height(infillPath);
             % Append to 'in' to new array 'infillpath'
@@ -107,49 +94,68 @@ warning('off','all')
         
             else
                 % Handles if there's a gap in the x axis.
-                infillPath(height(infillPath)+1,:) = NaN;
+                
+                infillPath(tempHeight+1,1:2) = NaN;
+                infillPath(tempHeight+1,3) = zHeight;
+
 
             end
             infillPath(tempHeight+1:tempHeight+height(in),3) = zHeight;
-       
+
         end
 
     end 
     [row,~] = find(isnan(infillPath));
     infillPath(:,4) = 1;
-    infillPath(row,1:4) = NaN;
+    infillPath(row,1:2) = NaN;
     
-    
-    % Im sorry daniel post processing is the only way I could think of :(
+    clear row;
+    clear res;
+    clear slicePath;
+    clear C;
+   
     % find each z layer from slice gen.
-    zThickness = sliceGen.sliceThickness;
-    for i = 0:zThickness:max(infillPath(:,3))
-        % Index of current z axis.
-        zIndex = find(ismember(infillPath(:,3),i));
-        
-        % Go through the z axis and check for NaN in x y axis, if NaN next ones
-        % increase part num by 1.
-        nanIndex = find(isnan(infillPath(min(zIndex):max(zIndex),4)))+(min(zIndex)-1);
+
+    zThicknesses = unique(infillPath(:,3));
+    newInfillPath = [];
+    for i = 1:height(zThicknesses)
+        tempCounter = 1;
+        currentZ = zThicknesses(i);
+        temp = infillPath(infillPath(:,3) == currentZ,:);
+        nanIndex = find(isnan(temp(:,2)));
         if ~isempty(nanIndex)
-            if (height(nanIndex) == 1)
-                infillPath(nanIndex:max(zIndex),4) = infillPath(nanIndex:max(zIndex),4) + 1;
+            if height(nanIndex) ==1
+                temp(nanIndex:height(temp),4) = temp(nanIndex:height(temp),4) + tempCounter;
+            
             else
-                tempCounter = 1;
                 for j = 1: height(nanIndex)-1
-                    infillPath(nanIndex(j,:):nanIndex(j+1,:),4)= infillPath(nanIndex(j,:):nanIndex(j+1,:),4)+(j);
-                    tempCounter = j;
+                    temp(nanIndex(j,:):nanIndex(j+1),4) = temp(nanIndex(j,:):nanIndex(j+1),4) + tempCounter;
+                    tempCounter = tempCounter + 1;
+                    
+                    if j == (height(nanIndex)-1)
+                        temp(nanIndex(height(nanIndex)):height(temp),4) = temp(nanIndex(height(nanIndex)):height(temp),4) + tempCounter;
+                    end
                 end
                 
-                if (j == height(nanIndex)-1)
-                infillPath(nanIndex(tempCounter+1):max(zIndex),4) = infillPath(nanIndex(tempCounter+1):max(zIndex),4) + (tempCounter+1);
-                end
+                
             end
+            
+            
         end
         
+        
+        % Append back into new array.
+        newInfillPath(height(newInfillPath)+1:height(newInfillPath)+height(temp),:) = temp;
+        
     end
-    
+    clear temp;
+    clear infillPath;
     % Clean NaN so export doesn't have it.
-    infillPath = nanCleanUp(infillPath);
+    
+    [row,~] = find(isnan(newInfillPath));
+    newInfillPath(row,1:4) = NaN;
+    
+    infillPath = nanCleanUp(newInfillPath);
     
     
 end

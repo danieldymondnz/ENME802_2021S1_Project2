@@ -38,6 +38,7 @@ classdef FlatUniformSliceGenerator < handle
         
         % Slice and return the X, Y, Z Coordinates of the slice path
         function slicePath = getSlicePath(obj)
+            obj.slicePath = [];
             generateSlicePath(obj);
             slicePath = obj.slicePath;
         end
