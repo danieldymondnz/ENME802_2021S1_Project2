@@ -109,7 +109,7 @@ function coordinatesToRotate = rotateY(coordinatesToRotate, thetaY)
     % invert rows and columns of matrix
     if mod(thetaY,90) == 0
         
-        direct = thetaY/abs(thetaX);
+        direct = thetaY/abs(thetaY);
         numOfNinetyDegRotations = thetaY / 90;
         
         for i = 1:abs(numOfNinetyDegRotations)
