@@ -7,10 +7,10 @@ warning('off','all')
     [C,~,~]=unique(slicePath(:,3));
     
     for j =1:height(C)
-        % This will be handled by Module 2 GUI
+       
+        % Find all layerpaths for each height
+        layerPath = slicePath(slicePath(:,3) == C(j),:);
 
-         layerPath = slicePath(slicePath(:,3) == C(j),:);
-%         layerPath = sliceGen.slicePathLayer(14);
 
         % Find minimum x and y values of layer path to set template of infill.
         minX = min(layerPath(:,1));
@@ -19,14 +19,13 @@ warning('off','all')
         maxY = max(layerPath(:,2));
 
         % Set polygon of layer
-        %     layerPolygon =  polyshape( layerPath(  : , 1 ),layerPath( :,2));
         numOfparts = max(layerPath(:,4));
 
+        % Separate polygon shapes by parts and redraw them later
         polyLayerPath = [];
         for i = 1: numOfparts
             temp = find(ismember(layerPath(:,4),i,'rows'));
             
-%             partNum = i;
             
             zHeight = layerPath(1,3);
 
@@ -37,21 +36,18 @@ warning('off','all')
                 polyLayerPath(:,1) = x;
                 polyLayerPath(:,2) = y;
                 polyLayerPath(:,3) = zHeight;
-%                 polyLayerPath(:,4) = partNum;
             else
                 polyLayerPath(polyHeight+1:polyHeight+height(x) , 1) = x;
                 polyLayerPath(polyHeight+1:polyHeight+height(y) , 2) = y;
                 polyLayerPath(polyHeight+1:polyHeight+height(zHeight) , 3) = zHeight;
-                
-%                 polyLayerPath(polyHeight+1:polyHeight+height(x) , 4) = partNum;
+
             end 
         polyLayerPath(height(polyLayerPath)+1,1:3) = NaN;
         end
         
-                % Create Polygon Shape
+        % Create Polygon Shape
         layerPolygon = polyshape(polyLayerPath(:,1),polyLayerPath(:,2));
-%         plot(layerPolygon);
-%         hold on;
+
         % Find all the points from min X to max X with incriment of infill
         % distance.
         res = linspace(minX,maxX,(maxX-minX)/infillDistance);
@@ -63,12 +59,9 @@ warning('off','all')
         maxLineseg = zeros(height(res),1);
         maxLineseg(:,1) = maxY;
 
-        % Initialize Path Array 
-        %NVM I realised I wont know how many intersects it can be. :(
-
+        % Initialise flip so it always starts at 1
         flip = 1;
-        % plot(layerPolygon);
-%         infillPartNum = 1;
+
         for i=1:height(res)
             % Create current line to cut the shape.
             lineseg = [res(i,:) minLineseg(1,1); res(i,:) maxLineseg(1,1)];
@@ -93,8 +86,8 @@ warning('off','all')
                 
         
             else
-                % Handles if there's a gap in the x axis.
                 
+                % Handles if there's a gap in the x axis.
                 infillPath(tempHeight+1,1:2) = NaN;
                 infillPath(tempHeight+1,3) = zHeight;
 
@@ -105,33 +98,47 @@ warning('off','all')
         end
 
     end 
+    
+    % Make rows equal to NaN if there is already a NaN 
+    % and initialize part numbers as 1 for now.
     [row,~] = find(isnan(infillPath));
     infillPath(:,4) = 1;
     infillPath(row,1:2) = NaN;
     
+    % Just to save memory :)
     clear row;
     clear res;
     clear slicePath;
     clear C;
    
-    % find each z layer from slice gen.
-
+    % find each z layer
     zThicknesses = unique(infillPath(:,3));
+    % initialize variable as an array
     newInfillPath = [];
+    % Loop through each layer height
     for i = 1:height(zThicknesses)
+        % Reset part number counter every layer
         tempCounter = 1;
         currentZ = zThicknesses(i);
+        % Find where all the paths for current layer
         temp = infillPath(infillPath(:,3) == currentZ,:);
+        % Find all the NaNs to reference where it should increment part num
         nanIndex = find(isnan(temp(:,2)));
+        
+        % If code found somewhere where there is NaN, increment part number
+        % by 1 to make sure GUI draws separately.
         if ~isempty(nanIndex)
             if height(nanIndex) ==1
                 temp(nanIndex:height(temp),4) = temp(nanIndex:height(temp),4) + tempCounter;
             
             else
+                % Loop through all of the NaN indexes and increment the
+                % part numbers in between 2 NaN's by 1
                 for j = 1: height(nanIndex)-1
                     temp(nanIndex(j,:):nanIndex(j+1),4) = temp(nanIndex(j,:):nanIndex(j+1),4) + tempCounter;
                     tempCounter = tempCounter + 1;
                     
+                    % Increment all of the last part numbers from last NaN by 1
                     if j == (height(nanIndex)-1)
                         temp(nanIndex(height(nanIndex)):height(temp),4) = temp(nanIndex(height(nanIndex)):height(temp),4) + tempCounter;
                     end
