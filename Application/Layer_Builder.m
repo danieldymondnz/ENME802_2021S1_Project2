@@ -12,23 +12,15 @@ function slicePath = Layer_Builder(pX,pY,pZ,numLayers,layerT)
     if numLayers == 1
         return
     end
-    
-    % Setting max value for layer number 
-   numlayermax = 10;
-   if numLayers > numlayermax
-       error('Too many layers!')
-   elseif (numLayers <= numlayermax)
-       return
-   end
    
     % For each additional layer, generate and store the slicePath
     for layerNumber = 2:numLayers
 
         % Generate the layer
-        [pX, pY, pZ] = generateLayer(pX, pY, pZ, layerT);
+        [pXdT, pYdT, pZdT] = generateLayer(pX, pY, pZ, layerT * (layerNumber - 1));
         
         % Convert to a Raster Path and Store
-        slicePath = [slicePath; rasterBezier(pX,pY,pZ,layerNumber)];   
+        slicePath = [slicePath; rasterBezier(pXdT,pYdT,pZdT,layerNumber)];   
 
     end
     
