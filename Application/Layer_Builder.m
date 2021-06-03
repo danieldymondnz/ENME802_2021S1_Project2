@@ -12,14 +12,6 @@ function slicePath = Layer_Builder(pX,pY,pZ,numLayers,layerT)
     if numLayers == 1
         return
     end
-    
-    % Setting max value for layer number 
-   numlayermax = 10;
-   if numLayers > numlayermax
-       error('Too many layers!')
-   elseif (numLayers <= numlayermax)
-       return
-   end
    
     % For each additional layer, generate and store the slicePath
     for layerNumber = 2:numLayers
