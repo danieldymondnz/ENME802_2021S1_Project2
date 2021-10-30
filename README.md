@@ -1,5 +1,5 @@
 # Adaptive and Curved Layer Slicing
-Application for Adaptive Layer and Curved Bezier Slicing for 3D FDM using MATLAB
+Application for Adaptive Layer and Curved Bezier Slicing for 3D FDM using MATLAB<p>
 Co-authored by danieldymondnz, Taja-c, Rospat & Harlley1319
 
 ## Application
